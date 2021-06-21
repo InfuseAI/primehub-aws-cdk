@@ -13,7 +13,7 @@ import * as crypto from 'crypto';
 
 // import { Cluster } from '@aws-cdk/aws-eks';
 
-const username = process.env.USERNAME || 'kent@infuseai.io';
+const username = process.env.USERNAME || 'dev@infuseai.io';
 const name = process.env.NAME || 'cdk';
 const basedDomain = process.env.AWS_BASED_DOMAIN || 'aws.primehub.io';
 const primehubPassword = process.env.PH_PASSWORD || crypto.randomBytes(32).toString('hex');;
