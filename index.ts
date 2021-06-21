@@ -124,7 +124,7 @@ export class EKSCluster extends cdk.Stack {
     primehubReadyHelmCharts.add(certManager);
     primehub.node.addDependency(primehubReadyHelmCharts);
 
-    new cdk.CfnOutput(this, 'PrimeHub URL', {value: `https://${primehubDomain}`);
+    new cdk.CfnOutput(this, 'PrimeHub URL', {value: `https://${primehubDomain}`});
     new cdk.CfnOutput(this, 'phadmin password', {value: primehubPassword});
     new cdk.CfnOutput(this, 'keycloak password', {value: keycloakPassword});
     cdk.Tags.of(eksCluster).add('owner', username);
