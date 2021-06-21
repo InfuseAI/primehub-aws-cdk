@@ -1,0 +1,29 @@
+{
+  "name": "eks-cdk",
+  "version": "1.0.0",
+  "description": "Basic PrimeHub ready EKS cluster",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "author": {
+    "name": "Kent Huang",
+    "url": "https://infuseai.io",
+    "organization": true
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^10.17.0",
+    "typescript": "~3.7.2"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-autoscaling": "*",
+    "@aws-cdk/aws-ec2": "*",
+    "@aws-cdk/aws-eks": "*",
+    "@aws-cdk/aws-iam": "*",
+    "@aws-cdk/core": "*",
+    "aws-cdk": "*"
+  }
+}
