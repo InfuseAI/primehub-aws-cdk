@@ -9,24 +9,13 @@ import { ClusterAutoScaler } from './cluster-autoscaler';
 import { IngressNginxController } from './nginx-ingress';
 import { CertManager } from './cert-manager';
 import { PrimeHub } from './primehub';
-import * as crypto from 'crypto';
-
-const env = {
-  account:  process.env.CDK_DEFAULT_ACCOUNT || '',
-  region:   process.env.CDK_DEFAULT_REGION || '',
-};
-
-const app = new cdk.App();
-
-const username = app.node.tryGetContext('username') || process.env.USERNAME || 'dev@infuseai.io';
-const name = app.node.tryGetContext('name') || process.env.NAME || 'cdk';
-const basedDomain = app.node.tryGetContext('basedDomain') || process.env.AWS_BASED_DOMAIN || 'aws.primehub.io';
-const primehubPassword = app.node.tryGetContext('primehubPassword') || process.env.PH_PASSWORD || crypto.randomBytes(32).toString('hex');
-const keycloakPassword = app.node.tryGetContext('keycloakPassword') || process.env.KC_PASSWORD || crypto.randomBytes(32).toString('hex');
 
 export interface EksStackProps extends cdk.StackProps {
-  clusterName?:  string;
+  name:  string;
+  username: string;
   basedDomain:  string;
+  primehubPassword: string;
+  keycloakPassword: string;
   masterRole?:  string;
 }
 
@@ -35,18 +24,13 @@ export class EKSCluster extends cdk.Stack {
     super(scope, id, props);
     let masterRole;
 
-    const clusterName = `eks-${name}`;
+    const clusterName = `eks-${props.name}`;
 
     const vpc = new ec2.Vpc(this, 'vpc', {
       enableDnsHostnames: true,
       enableDnsSupport: true,
       natGateways: 0,
     });  // Create a new VPC for our cluster
-    
-    // IAM role for our EC2 worker nodes
-    // const workerRole = new iam.Role(this, 'eks-worker-role', {
-    //   assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com')
-    // });
 
     // cluster master role
     if (props.masterRole) {
@@ -68,7 +52,7 @@ export class EKSCluster extends cdk.Stack {
       // Networking related settings listed below - important in enterprise context.
       endpointAccess: eks.EndpointAccess.PUBLIC, // In Enterprise context, you may want to set it to PRIVATE.
       vpc: vpc,
-      vpcSubnets: [{ subnetType: ec2.SubnetType.PUBLIC}], // you can also specify the subnets by other attributes 
+      vpcSubnets: [{ subnetType: ec2.SubnetType.PUBLIC}], // you can also specify the subnets by other attributes
       defaultCapacity: 0,
     });
 
@@ -82,48 +66,10 @@ export class EKSCluster extends cdk.Stack {
       tags: {
         Name: `${clusterName}-default-node-group`,
         cluster: clusterName,
-        owner: username,
+        owner: props.username,
         clusterType: "dev-eks"
       },
     });
-
-    // const scaledCpuPool = eksCluster.addNodegroupCapacity('Scaled-Cpu-Pool', {
-    //   nodegroupName: 'scaled-cpu-pool',
-    //   desiredSize: 0,
-    //   minSize: 0,
-    //   maxSize: 2,
-    //   instanceTypes: [new InstanceType('t3a.xlarge')],
-    //   subnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: ['ap-northeast-1a']},
-    //   tags: {
-    //     Name: `${clusterName}-scaled-cpu-pool`,
-    //     cluster: clusterName,
-    //     owner: username,
-    //     clusterType: "dev-eks",
-    //     [`k8s.io/cluster-autoscaler/${clusterName}`]: 'onwed',
-    //     'k8s.io/cluster-autoscaler/enabled': 'TRUE',
-    //     'k8s.io/cluster-autoscaler/node-template/label/auto-scaler': 'enabled',
-    //     'k8s.io/cluster-autoscaler/node-template/label/component': 'singleuser-server',
-    //     'k8s.io/cluster-autoscaler/node-template/label/hub.jupyter.org/node-purpose': 'user',
-    //     'k8s.io/cluster-autoscaler/node-template/taint/hub.jupyter.org/dedicated': 'user:NoSchedule'
-    //   },
-    //   labels: {
-    //     'auto-scaler': 'enabled',
-    //     'component': 'singleuser-server',
-    //     'hub.jupyter.org/node-purpose': 'user'
-    //   },
-    // });
-
-    // const asg = new AutoScalingGroup(this, 'OnDemandASG', {
-    //   autoScalingGroupName: `${clusterName}-scaled-cpu-pool`,
-    //   desiredCapacity: 0,
-    //   minCapacity: 0,
-    //   maxCapacity: 2,
-    //   instanceType: new InstanceType('t3a.xlarge'),
-    //   vpc: vpc,
-    //   vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: ['ap-northeast-1a']},
-    //   machineImage: new eks.EksOptimizedImage()
-    // });
-    // eksCluster.connectAutoScalingGroupCapacity(asg, {});
 
     const cpuASG = eksCluster.addAutoScalingGroupCapacity('OnDemandCpuASG', {
       autoScalingGroupName: `${clusterName}-scaled-cpu-pool`,
@@ -137,8 +83,8 @@ export class EKSCluster extends cdk.Stack {
       },
     });
     cdk.Tags.of(cpuASG).add('Name', `${clusterName}-scaled-cpu-pool`);
-    cdk.Tags.of(cpuASG).add('cluster', clusterName); 
-    cdk.Tags.of(cpuASG).add('owner', username);
+    cdk.Tags.of(cpuASG).add('cluster', clusterName);
+    cdk.Tags.of(cpuASG).add('owner', props.username);
     cdk.Tags.of(cpuASG).add('clusterType', 'dev-eks');
     cdk.Tags.of(cpuASG).add(`k8s.io/cluster-autoscaler/${clusterName}`, 'owned');
     cdk.Tags.of(cpuASG).add('k8s.io/cluster-autoscaler/enabled', 'TRUE');
@@ -160,8 +106,8 @@ export class EKSCluster extends cdk.Stack {
       },
     });
     cdk.Tags.of(gpuASG).add('Name', `${clusterName}-scaled-gpu-pool`);
-    cdk.Tags.of(gpuASG).add('cluster', clusterName); 
-    cdk.Tags.of(gpuASG).add('owner', username);
+    cdk.Tags.of(gpuASG).add('cluster', clusterName);
+    cdk.Tags.of(gpuASG).add('owner', props.username);
     cdk.Tags.of(gpuASG).add('clusterType', 'dev-eks');
     cdk.Tags.of(gpuASG).add(`k8s.io/cluster-autoscaler/${clusterName}`, 'owned');
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/enabled', 'TRUE');
@@ -230,33 +176,24 @@ export class EKSCluster extends cdk.Stack {
     });
 
 
-    const primehubDomain = `hub.${clusterName}.${props.basedDomain}`; 
+    const primehubDomain = `hub.${clusterName}.${props.basedDomain}`;
     const primehub = new PrimeHub(this, 'primehub', {
       eksCluster: eksCluster,
       primehubDomain: primehubDomain,
-      primehubPassword: primehubPassword,
-      keycloakPassword: keycloakPassword,
+      primehubPassword: props.primehubPassword,
+      keycloakPassword: props.keycloakPassword,
     });
-    
+
     const primehubReadyHelmCharts = new cdk.ConcreteDependable();
     primehubReadyHelmCharts.add(ingressNginx);
     primehubReadyHelmCharts.add(certManager);
     primehub.node.addDependency(primehubReadyHelmCharts);
 
     new cdk.CfnOutput(this, 'PrimeHub URL', {value: `https://${primehubDomain}`});
-    new cdk.CfnOutput(this, 'phadmin password', {value: primehubPassword});
-    new cdk.CfnOutput(this, 'keycloak password', {value: keycloakPassword});
-    cdk.Tags.of(eksCluster).add('owner', username);
+    new cdk.CfnOutput(this, 'phadmin password', {value: props.primehubPassword});
+    new cdk.CfnOutput(this, 'keycloak password', {value: props.keycloakPassword});
+
+    cdk.Tags.of(eksCluster).add('owner', props.username);
     cdk.Tags.of(eksCluster).add('clusterType', 'dev-eks');
   }
 }
-
-const eksStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
-  env: env, 
-  basedDomain: basedDomain,
-});
-
-cdk.Tags.of(eksStack).add("owner", username);
-cdk.Tags.of(eksStack).add("clusterType", 'dev-eks');
-
-app.synth();

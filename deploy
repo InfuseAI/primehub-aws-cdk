@@ -19,11 +19,8 @@ node -v
 info "\n[Fetch] Packages"
 yarn install
 
-info "\n[Build] cdk"
-npm run build
-
 USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
-NAME=${1:-'cdk'}  
+NAME=${1:-'cdk'}
 
 if [ ! -f "./cdk.context.json" ]; then
   info "[Create] CDK context"
@@ -45,6 +42,7 @@ if [ ! -f "./cdk.context.json" ]; then
     -c HubProxySecretKey=$HUB_PROXY_SECRET_TOKEN \
     --json --strict > cdk.context.tmp
     mv cdk.context.json
+    cdk context
 else
   info "[Found] CDK context"
   cdk context
