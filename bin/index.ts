@@ -1,5 +1,3 @@
-#! /user/bin/env node
-
 import cdk = require('@aws-cdk/core');
 import * as crypto from 'crypto';
 
