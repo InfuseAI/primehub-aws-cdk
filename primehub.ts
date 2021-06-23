@@ -2,7 +2,7 @@ import * as cdk from '@aws-cdk/core';
 import * as eks from '@aws-cdk/aws-eks';
 import * as crypto from 'crypto';
 
-export interface PrimebHubProps {
+export interface PrimeHubProps {
     eksCluster: eks.ICluster,
     primehubDomain: string,
     primehubPassword: string,
@@ -17,11 +17,13 @@ export class PrimeHub extends cdk.Construct {
     constructor(
         scope: cdk.Construct,
         id: string,
-        props: PrimebHubProps,
+        props: PrimeHubProps,
     ) {
         super(scope, id)
-        const graphqlSecretKey = crypto.randomBytes(32).toString('hex');
-        const hubProxySecretKey = crypto.randomBytes(32).toString('hex');
+
+        const graphqlSecretKey = scope.node.tryGetContext('GraphqlSecretKey') || process.env.ADMIN_UI_GRAPHQL_SECRET_KEY || crypto.randomBytes(32).toString('hex');
+        const hubProxySecretKey = scope.node.tryGetContext('HubProxySecretKey') || process.env.HUB_PROXY_SECRET_TOKEN || crypto.randomBytes(32).toString('hex');
+
         const helmValues = {
             primehub: {
                 domain: props.primehubDomain,

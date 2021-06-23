@@ -1,0 +1,54 @@
+#! /bin/bash
+set -eo pipefail
+
+info() {
+  echo -e "\033[0;32m$1\033[0m"
+}
+
+warn() {
+  echo -e "\033[0;93m$1\033[0m"
+}
+
+error() {
+  echo -e "\033[0;91m$1\033[0m" >&2
+}
+
+info "[Node] Version"
+node -v
+
+info "\n[Fetch] Packages"
+yarn install
+
+info "\n[Build] cdk"
+npm run build
+
+USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
+NAME=${1:-'cdk'}  
+
+if [ ! -f "./cdk.context.json" ]; then
+  info "[Create] CDK context"
+  USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
+  NAME=${1:-'cdk'}
+  AWS_BASED_DOMAIN=${AWS_BASED_DOMAIN:-'aws.primehub.io'}
+  PH_PASSWORD=$(openssl rand -hex 16)
+  KC_PASSWORD=$(openssl rand -hex 16)
+  ADMIN_UI_GRAPHQL_SECRET_KEY=$(openssl rand -hex 32)
+  HUB_PROXY_SECRET_TOKEN=$(openssl rand -hex 32)
+
+  cdk context \
+    -c username=$USERNAME \
+    -c name=$NAME \
+    -c basedDomain=$AWS_BASED_DOMAIN \
+    -c primehubPassword=$PH_PASSWORD \
+    -c keycloakPassword=$KC_PASSWORD \
+    -c GraphqlSecretKey=$ADMIN_UI_GRAPHQL_SECRET_KEY \
+    -c HubProxySecretKey=$HUB_PROXY_SECRET_TOKEN \
+    --json --strict > cdk.context.tmp
+    mv cdk.context.json
+else
+  info "[Found] CDK context"
+  cdk context
+fi
+
+info "[Deploy] eks-$NAME by $USERNAME"
+cdk deploy

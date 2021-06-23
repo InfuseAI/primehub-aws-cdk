@@ -78,7 +78,7 @@ export class IngressNginxController extends cdk.Construct {
             namespace: 'ingress-nginx',
             release: 'nginx-ingress',
             values: helmValues,
-            wait: false,
+            wait: true,
         });
     }
 }

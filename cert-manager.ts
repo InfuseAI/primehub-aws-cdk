@@ -53,7 +53,7 @@ export class CertManager extends cdk.Construct {
             release: 'cert-manager',
             version: 'v0.15.0',
             values: helmValues,
-            wait: false,
+            wait: true,
         });
 
         const clusterIssuer = new eks.KubernetesManifest(this, id, {
