@@ -174,7 +174,8 @@ export class EKSCluster extends cdk.Stack {
         aws: {
           account: account,
           region: region,
-        }
+        },
+        targetNamespace: 'hub'
       },
       wait: false,
     });
