@@ -5,7 +5,7 @@ import { EKSCluster } from '../lib/eks-cluster-Stack';
 
 const env = {
   account:  process.env.CDK_DEFAULT_ACCOUNT || '',
-  region:   process.env.CDK_DEFAULT_REGION || '',
+  region:   process.env.CDK_DEFAULT_REGION || 'ap-northeast-1',
 };
 
 const app = new cdk.App();
