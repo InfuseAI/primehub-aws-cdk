@@ -19,10 +19,10 @@ node -v
 info "\n[Fetch] Packages"
 yarn install
 
-USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
-NAME=${1:-'cdk'}
+export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
+export NAME=${1:-'cdk'}
 
-if [ ! -f "./cdk.context.json" ]; then
+if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"'); then
   info "[Create] CDK context"
   USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
   NAME=${1:-'cdk'}
@@ -33,6 +33,7 @@ if [ ! -f "./cdk.context.json" ]; then
   HUB_PROXY_SECRET_TOKEN=$(openssl rand -hex 32)
 
   cdk context \
+    -c clusterType=dev-eks \
     -c username=$USERNAME \
     -c name=$NAME \
     -c basedDomain=$AWS_BASED_DOMAIN \

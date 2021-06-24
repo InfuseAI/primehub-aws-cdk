@@ -285,3 +285,4 @@ yarn-error.log
 .nzm-*
 
 /.versionrc.json
+artifact/

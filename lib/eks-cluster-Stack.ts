@@ -9,6 +9,7 @@ import { ClusterAutoScaler } from './cluster-autoscaler';
 import { IngressNginxController } from './nginx-ingress';
 import { CertManager } from './cert-manager';
 import { PrimeHub } from './primehub';
+import { NvidiaDevicePlugin } from './nvidia-device-plugin';
 
 export interface EksStackProps extends cdk.StackProps {
   name:  string;
@@ -23,7 +24,9 @@ export class EKSCluster extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: EksStackProps) {
     super(scope, id, props);
     let masterRole;
-
+    const env: cdk.Environment = props.env || {};
+    const account: string  = env.account || '';
+    const region: string = env.region || 'ap-northeast-1';
     const clusterName = `eks-${props.name}`;
 
     const vpc = new ec2.Vpc(this, 'vpc', {
@@ -41,7 +44,6 @@ export class EKSCluster extends cdk.Stack {
         assumedBy: new iam.AnyPrincipal(),
       });
     }
-
 
     const eksCluster = new eks.Cluster(this, 'Cluster', {
       version: eks.KubernetesVersion.V1_20,
@@ -116,6 +118,13 @@ export class EKSCluster extends cdk.Stack {
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/node-template/label/hub.jupyter.org/node-purpose', 'user');
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/node-template/taint/nvidia.com/gpu', 'true:NoSchedule');
 
+    // Nvidia device Plugin
+    new NvidiaDevicePlugin(this, 'NvidiaDevicePlugin', {
+      eksCluster: eksCluster,
+      nodeSelector: { 'nvidia.com/gpu': 'true' },
+      tolerations: [{ operator: 'Exists', effect: 'NoSchedule' }],
+    });
+
     // Auto Scale
     const autoscalerStmt = new iam.PolicyStatement();
     autoscalerStmt.addResources("*");
@@ -139,7 +148,37 @@ export class EKSCluster extends cdk.Stack {
     new ClusterAutoScaler(this, 'cluster-autoscaler', {
       eksCluster: eksCluster,
       version: 'v1.21.0'
-    })
+    });
+
+    // AWS ECR
+    const ecrStamt = new iam.PolicyStatement();
+    ecrStamt.addResources("*");
+    ecrStamt.addActions(
+      "ecr:*",
+      "sts:GetServiceBearerToken"
+    );
+    const ecrPolicy = new iam.Policy(this, "ecr-full-access-policy", {
+      policyName: "ECRFullAccessPolicy",
+      statements: [ecrStamt],
+    });
+    ecrPolicy.attachToRole(defaultNodeGroup.role);
+    ecrPolicy.attachToRole(cpuASG.role);
+    ecrPolicy.attachToRole(gpuASG.role);
+    eksCluster.addHelmChart('aws-ecr-credential', {
+      chart: "aws-ecr-credential",
+      release: "aws-ecr-credential",
+      repository: 'https://charts.infuseai.io',
+      createNamespace: true,
+      namespace: 'hub',
+      values: {
+        aws: {
+          account: account,
+          region: region,
+        },
+        targetNamespace: 'hub'
+      },
+      wait: false,
+    });
 
     const ingressNginx = new IngressNginxController(this, 'ingress-nginx-controller', {
       eksCluster: eksCluster,
@@ -179,9 +218,12 @@ export class EKSCluster extends cdk.Stack {
     const primehubDomain = `hub.${clusterName}.${props.basedDomain}`;
     const primehub = new PrimeHub(this, 'primehub', {
       eksCluster: eksCluster,
+      clusterName: clusterName,
       primehubDomain: primehubDomain,
       primehubPassword: props.primehubPassword,
       keycloakPassword: props.keycloakPassword,
+      account: account,
+      region: region
     });
 
     const primehubReadyHelmCharts = new cdk.ConcreteDependable();
@@ -194,6 +236,7 @@ export class EKSCluster extends cdk.Stack {
     new cdk.CfnOutput(this, 'keycloak password', {value: props.keycloakPassword});
 
     cdk.Tags.of(eksCluster).add('owner', props.username);
+    cdk.Tags.of(eksCluster).add('clusterName', clusterName);
     cdk.Tags.of(eksCluster).add('clusterType', 'dev-eks');
   }
 }
