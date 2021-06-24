@@ -101,7 +101,7 @@ export class EKSCluster extends cdk.Stack {
       instanceType: new InstanceType('g4dn.xlarge'),
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: ['ap-northeast-1a']},
       bootstrapOptions: {
-        kubeletExtraArgs: "--node-labels=component='singleuser-server',hub.jupyter.org/node-purpose='user' --register-with-taints='nvidia.com/gpu=true:NoSchedule'",
+        kubeletExtraArgs: "--node-labels=component='singleuser-server',hub.jupyter.org/node-purpose='user',nvidia.com/gpu='true' --register-with-taints='nvidia.com/gpu=true:NoSchedule'",
         dockerConfigJson: '{ "exec-opts": ["native.cgroupdriver=systemd"] }',
       },
     });

@@ -41,7 +41,7 @@ if [ ! -f "./cdk.context.json" ]; then
     -c GraphqlSecretKey=$ADMIN_UI_GRAPHQL_SECRET_KEY \
     -c HubProxySecretKey=$HUB_PROXY_SECRET_TOKEN \
     --json --strict > cdk.context.tmp
-    mv cdk.context.json
+    mv cdk.context.tmp cdk.context.json
     cdk context
 else
   info "[Found] CDK context"
