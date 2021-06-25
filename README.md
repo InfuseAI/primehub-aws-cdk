@@ -26,8 +26,8 @@ The EKS cluster will include a Managed Node Group for PrimeHub system and 2 Auto
 Way to deploy the EKS stack with AWS CDK
 
 ```bash
-git clone https://github.com/InfuseAI/aws-cdk.git
-cd aws-cdk
+git clone https://github.com/InfuseAI/primehub-aws-cdk.git
+cd primehub-aws-cdk
 ./deploy <cluster-name>
 ```
 
