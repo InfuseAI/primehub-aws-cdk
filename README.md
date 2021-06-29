@@ -11,6 +11,7 @@ The EKS cluster will include a Managed Node Group for PrimeHub system and 2 Auto
 * Node.js version >= 10.13.0 (We recommend a version in active long-term support, which, at this writing, is the latest 14.x release.)
 * CDK version >= 1.109
 * yarn
+* ts-node
 
 ## What is being deployed
 
