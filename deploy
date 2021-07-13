@@ -19,13 +19,15 @@ node -v
 info "\n[Fetch] Packages"
 yarn install
 
-export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
-export NAME=${1:-'cdk'}
+# export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
+#export NAME=${1:-'cdk'}
+export USERNAME="primehub-starter"
+export NAME="primehub-starter-$(date +"%m%d%H%M")"
 
 if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"'); then
   info "[Create] CDK context"
-  USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
-  NAME=${1:-'cdk'}
+  # USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
+  # NAME=${1:-'cdk'}
   AWS_BASED_DOMAIN=${AWS_BASED_DOMAIN:-'aws.primehub.io'}
   PH_PASSWORD=$(openssl rand -hex 16)
   KC_PASSWORD=$(openssl rand -hex 16)
