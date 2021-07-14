@@ -22,7 +22,9 @@ yarn install
 # export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
 #export NAME=${1:-'cdk'}
 export USERNAME="primehub-starter"
-export NAME="primehub-starter-$(date +"%m%d%H%M")"
+
+# pass from the primehub-starter
+export NAME="$AWS_STACK_NAME"
 
 if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"'); then
   info "[Create] CDK context"
