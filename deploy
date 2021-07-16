@@ -1,6 +1,11 @@
 #! /bin/bash
 set -eo pipefail
 
+NAME=
+DRY_MODE=false
+AWS_REGION=${AWS_REGION:-ap-northeast-1}
+AWS_ZONE=${AWS_ZONE:-a}
+
 info() {
   echo -e "\033[0;32m$1\033[0m"
 }
@@ -13,41 +18,125 @@ error() {
   echo -e "\033[0;91m$1\033[0m" >&2
 }
 
-info "[Node] Version"
-node -v
+usage() {
+  local SELF=`basename $0`
+  cat <<EOF
+Usage: $SELF [options] <ClusterName>
 
-info "\n[Fetch] Packages"
-yarn install
+Options:
+  --dry-run                   : Dry run AWS CDK deploy
+  --domain   <base domain>    : Provide the base domain managed by AWS Route 53
+  -h, --help                  : Show this message
+EOF
+  # --region                    : Set the AWS region ( Default: ${AWS_REGION} )
+  # --zone                      : Set the AWS availability zones ( Default: ${AWS_ZONE} )
+}
 
-export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
-export NAME=${1:-'cdk'}
+node::version() {
+  info "[Node] Version"
+  node -v
+}
 
-if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"'); then
-  info "[Create] CDK context"
-  USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
-  NAME=${1:-'cdk'}
-  AWS_BASED_DOMAIN=${AWS_BASED_DOMAIN:-'aws.primehub.io'}
-  PH_PASSWORD=$(openssl rand -hex 16)
-  KC_PASSWORD=$(openssl rand -hex 16)
-  ADMIN_UI_GRAPHQL_SECRET_KEY=$(openssl rand -hex 32)
-  HUB_PROXY_SECRET_TOKEN=$(openssl rand -hex 32)
+node::packages() {
+  info "\n[Fetch] Packages"
+  yarn install
+  echo ""
+}
 
-  cdk context \
-    -c clusterType=dev-eks \
-    -c username=$USERNAME \
-    -c name=$NAME \
-    -c basedDomain=$AWS_BASED_DOMAIN \
-    -c primehubPassword=$PH_PASSWORD \
-    -c keycloakPassword=$KC_PASSWORD \
-    -c GraphqlSecretKey=$ADMIN_UI_GRAPHQL_SECRET_KEY \
-    -c HubProxySecretKey=$HUB_PROXY_SECRET_TOKEN \
-    --json --strict > cdk.context.tmp
-    mv cdk.context.tmp cdk.context.json
+cdk::context() {
+  if aws sts get-caller-identity | grep "Arn" | grep "assumed-role"; then
+    export USERNAME=$(aws sts get-caller-identity  | grep "Arn" | sed 's/.*:assumed-role\/\(.*\)\/.*/\1/')
+  else
+    export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
+  fi
+  export NAME=${NAME:-'cdk'}
+
+  if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"' > /dev/null ); then
+    info "[Create] CDK context"
+    AWS_BASED_DOMAIN=${AWS_BASED_DOMAIN:-''}
+    PH_PASSWORD=$(openssl rand -hex 16)
+    KC_PASSWORD=$(openssl rand -hex 16)
+    ADMIN_UI_GRAPHQL_SECRET_KEY=$(openssl rand -hex 32)
+    HUB_PROXY_SECRET_TOKEN=$(openssl rand -hex 32)
+
+    cdk context \
+      -c clusterType=dev-eks \
+      -c username=$USERNAME \
+      -c name=$NAME \
+      -c basedDomain=$AWS_BASED_DOMAIN \
+      -c primehubPassword=$PH_PASSWORD \
+      -c keycloakPassword=$KC_PASSWORD \
+      -c GraphqlSecretKey=$ADMIN_UI_GRAPHQL_SECRET_KEY \
+      -c HubProxySecretKey=$HUB_PROXY_SECRET_TOKEN \
+      --json --strict > cdk.context.tmp
+      mv cdk.context.tmp cdk.context.json
+      cdk context
+  else
+    info "[Found] CDK context"
     cdk context
-else
-  info "[Found] CDK context"
-  cdk context
-fi
+  fi
+}
 
-info "[Deploy] eks-$NAME by $USERNAME"
-cdk deploy
+cdk::deploy() {
+  info "[Deploy] eks-$NAME by $USERNAME"
+  cdk deploy
+}
+
+cdk::dry() {
+  info "[Dry Run] eks-$NAME by $USERNAME"
+  cdk synth > cdk.cloudformation.out
+  info "[Output] Please check the output from 'cdk.cloudformation.out'"
+}
+
+args::parse() {
+  while (( "$#" )); do
+    case "${1:-}" in
+      # --region)
+      #   shift
+      #   AWS_REGION=${1}
+      # ;;
+      # --zone)
+      #   shift
+      #   AWS_ZONE=${1}
+      # ;;
+      --dry-run)
+        DRY_MODE=true
+      ;;
+      --domain)
+        shift
+        AWS_BASED_DOMAIN=${1}
+      ;;
+      -h|--help)
+        usage
+        exit 0
+      ;;
+      --debug)
+        set -x
+      ;;
+      *)
+        if [ "${NAME}" == "" ]; then
+          NAME=$1
+        else
+          error "[Syntax error] Should only provide one cluster name"
+          usage
+          exit 1
+        fi
+      ;;
+    esac
+    shift || (usage; exit 1)
+  done
+}
+
+main() {
+  args::parse "$@"
+  node::version
+  node::packages
+  cdk::context "$@"
+  if [ "${DRY_MODE}" == "true" ]; then
+    cdk::dry
+  else
+    cdk::deploy
+  fi
+}
+
+main "$@"

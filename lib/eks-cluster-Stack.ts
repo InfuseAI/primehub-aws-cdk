@@ -24,6 +24,7 @@ export class EKSCluster extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: EksStackProps) {
     super(scope, id, props);
     let masterRole;
+    let primehubDomain;
     const env: cdk.Environment = props.env || {};
     const account: string  = env.account || '';
     const region: string = env.region || 'ap-northeast-1';
@@ -196,26 +197,29 @@ export class EKSCluster extends cdk.Stack {
       jsonPath: '.status.loadBalancer.ingress[0].hostname'
     });
 
-    // Setup DNS record by AWS ELB
-    new cdk.CfnOutput(this, 'elb', {value: awsElbAddress.value});
-    const hostedZone =  route53.HostedZone.fromLookup(this, 'Domain', {
-      domainName: props.basedDomain
-    });
-    new route53.ARecord(this, 'ARecord', {
-      zone: hostedZone,
-      recordName: `*.${clusterName}.${props.basedDomain}.`,
-      target: route53.RecordTarget.fromAlias({
-        bind() {
-          return {
-            dnsName: awsElbAddress.value,
-            hostedZoneId: 'Z31USIVHYNEOWT',
-          };
-        },
-      }),
-    });
+    if (props.basedDomain != '') {
+      // Setup DNS record by AWS ELB
+      new cdk.CfnOutput(this, 'elb', {value: awsElbAddress.value});
+      const hostedZone =  route53.HostedZone.fromLookup(this, 'Domain', {
+        domainName: props.basedDomain
+      });
+      new route53.ARecord(this, 'ARecord', {
+        zone: hostedZone,
+        recordName: `*.${clusterName}.${props.basedDomain}.`,
+        target: route53.RecordTarget.fromAlias({
+          bind() {
+            return {
+              dnsName: awsElbAddress.value,
+              hostedZoneId: 'Z31USIVHYNEOWT',
+            };
+          },
+        }),
+      });
+      primehubDomain = `hub.${clusterName}.${props.basedDomain}`;
+    } else {
+      primehubDomain = awsElbAddress.value;
+    }
 
-
-    const primehubDomain = `hub.${clusterName}.${props.basedDomain}`;
     const primehub = new PrimeHub(this, 'primehub', {
       eksCluster: eksCluster,
       clusterName: clusterName,
