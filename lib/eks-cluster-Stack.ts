@@ -196,10 +196,10 @@ export class EKSCluster extends cdk.Stack {
       objectNamespace: 'ingress-nginx',
       jsonPath: '.status.loadBalancer.ingress[0].hostname'
     });
+    new cdk.CfnOutput(this, 'AWS ELB Domain', {value: awsElbAddress.value});
 
     if (props.basedDomain != '') {
       // Setup DNS record by AWS ELB
-      new cdk.CfnOutput(this, 'elb', {value: awsElbAddress.value});
       const hostedZone =  route53.HostedZone.fromLookup(this, 'Domain', {
         domainName: props.basedDomain
       });
@@ -236,8 +236,10 @@ export class EKSCluster extends cdk.Stack {
     primehub.node.addDependency(primehubReadyHelmCharts);
 
     new cdk.CfnOutput(this, 'PrimeHub URL', {value: `https://${primehubDomain}`});
-    new cdk.CfnOutput(this, 'phadmin password', {value: props.primehubPassword});
-    new cdk.CfnOutput(this, 'keycloak password', {value: props.keycloakPassword});
+    new cdk.CfnOutput(this, 'PrimeHub Account', {value: 'phadmin'});
+    new cdk.CfnOutput(this, 'PrimeHub Password', {value: props.primehubPassword});
+    new cdk.CfnOutput(this, 'Keycloak Account', {value: 'keycloak'});
+    new cdk.CfnOutput(this, 'Keycloak Password', {value: props.keycloakPassword});
 
     cdk.Tags.of(eksCluster).add('owner', props.username);
     cdk.Tags.of(eksCluster).add('clusterName', clusterName);
