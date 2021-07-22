@@ -94,7 +94,7 @@ export class ClusterAutoScaler extends cdk.Construct {
                   },
                   {
                     apiGroups: ["storage.k8s.io"],
-                    resources: ["storageclasses", "csinodes"],
+                    resources: ["storageclasses", "csinodes", "csistoragecapacities", "csidrivers"],
                     verbs: ["watch", "list", "get"],
                   },
                   {
@@ -216,7 +216,7 @@ export class ClusterAutoScaler extends cdk.Construct {
                           resources: {
                             limits: {
                               cpu: "100m",
-                              memory: "300Mi",
+                              memory: "500Mi",
                             },
                             requests: {
                               cpu: "100m",
