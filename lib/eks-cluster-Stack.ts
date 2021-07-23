@@ -24,6 +24,7 @@ export class EKSCluster extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: EksStackProps) {
     super(scope, id, props);
     let masterRole;
+    let primehubDomain;
     const env: cdk.Environment = props.env || {};
     const account: string  = env.account || '';
     const region: string = env.region || 'ap-northeast-1';
@@ -81,7 +82,7 @@ export class EKSCluster extends cdk.Stack {
       instanceType: new InstanceType('t3a.xlarge'),
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: ['ap-northeast-1a']},
       bootstrapOptions: {
-        kubeletExtraArgs: "--node-labels=component='singleuser-server',hub.jupyter.org/node-purpose='user' --register-with-taints='hub.jupyter.org/dedicated=user:NoSchedule'",
+        kubeletExtraArgs: "--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user --register-with-taints=hub.jupyter.org/dedicated=user:NoSchedule",
       },
     });
     cdk.Tags.of(cpuASG).add('Name', `${clusterName}-scaled-cpu-pool`);
@@ -103,7 +104,7 @@ export class EKSCluster extends cdk.Stack {
       instanceType: new InstanceType('g4dn.xlarge'),
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: ['ap-northeast-1a']},
       bootstrapOptions: {
-        kubeletExtraArgs: "--node-labels=component='singleuser-server',hub.jupyter.org/node-purpose='user',nvidia.com/gpu='true' --register-with-taints='nvidia.com/gpu=true:NoSchedule'",
+        kubeletExtraArgs: "--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user,nvidia.com/gpu=true --register-with-taints=nvidia.com/gpu=true:NoSchedule",
         dockerConfigJson: '{ "exec-opts": ["native.cgroupdriver=systemd"] }',
       },
     });
@@ -195,27 +196,30 @@ export class EKSCluster extends cdk.Stack {
       objectNamespace: 'ingress-nginx',
       jsonPath: '.status.loadBalancer.ingress[0].hostname'
     });
+    new cdk.CfnOutput(this, 'AWS ELB Domain', {value: awsElbAddress.value});
 
-    // Setup DNS record by AWS ELB
-    new cdk.CfnOutput(this, 'elb', {value: awsElbAddress.value});
-    const hostedZone =  route53.HostedZone.fromLookup(this, 'Domain', {
-      domainName: props.basedDomain
-    });
-    new route53.ARecord(this, 'ARecord', {
-      zone: hostedZone,
-      recordName: `*.${clusterName}.${props.basedDomain}.`,
-      target: route53.RecordTarget.fromAlias({
-        bind() {
-          return {
-            dnsName: awsElbAddress.value,
-            hostedZoneId: 'Z31USIVHYNEOWT',
-          };
-        },
-      }),
-    });
+    if (props.basedDomain != '') {
+      // Setup DNS record by AWS ELB
+      const hostedZone =  route53.HostedZone.fromLookup(this, 'Domain', {
+        domainName: props.basedDomain
+      });
+      new route53.ARecord(this, 'ARecord', {
+        zone: hostedZone,
+        recordName: `*.${clusterName}.${props.basedDomain}.`,
+        target: route53.RecordTarget.fromAlias({
+          bind() {
+            return {
+              dnsName: awsElbAddress.value,
+              hostedZoneId: 'Z31USIVHYNEOWT',
+            };
+          },
+        }),
+      });
+      primehubDomain = `hub.${clusterName}.${props.basedDomain}`;
+    } else {
+      primehubDomain = awsElbAddress.value;
+    }
 
-
-    const primehubDomain = `hub.${clusterName}.${props.basedDomain}`;
     const primehub = new PrimeHub(this, 'primehub', {
       eksCluster: eksCluster,
       clusterName: clusterName,
@@ -232,8 +236,10 @@ export class EKSCluster extends cdk.Stack {
     primehub.node.addDependency(primehubReadyHelmCharts);
 
     new cdk.CfnOutput(this, 'PrimeHub URL', {value: `https://${primehubDomain}`});
-    new cdk.CfnOutput(this, 'phadmin password', {value: props.primehubPassword});
-    new cdk.CfnOutput(this, 'keycloak password', {value: props.keycloakPassword});
+    new cdk.CfnOutput(this, 'PrimeHub Account', {value: 'phadmin'});
+    new cdk.CfnOutput(this, 'PrimeHub Password', {value: props.primehubPassword});
+    new cdk.CfnOutput(this, 'Keycloak Account', {value: 'keycloak'});
+    new cdk.CfnOutput(this, 'Keycloak Password', {value: props.keycloakPassword});
 
     cdk.Tags.of(eksCluster).add('owner', props.username);
     cdk.Tags.of(eksCluster).add('clusterName', clusterName);
