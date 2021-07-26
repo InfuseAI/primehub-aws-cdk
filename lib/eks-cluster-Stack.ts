@@ -3,7 +3,6 @@ import ec2 = require('@aws-cdk/aws-ec2');
 import eks = require('@aws-cdk/aws-eks');
 import cdk = require('@aws-cdk/core');
 import route53 = require('@aws-cdk/aws-route53');
-import elb = require('@aws-cdk/aws-elasticloadbalancingv2');
 
 import { InstanceType } from '@aws-cdk/aws-ec2';
 import { ClusterAutoScaler } from './cluster-autoscaler';
