@@ -3,8 +3,11 @@ set -eo pipefail
 
 NAME=
 DRY_MODE=false
-AWS_REGION=${AWS_REGION:-ap-northeast-1}
+AWS_ACCOUNT=${AWS_ACCOUNT:-}
+AWS_REGION=${AWS_REGION:-}
 AWS_ZONE=${AWS_ZONE:-a}
+CPU_INSTANCE='t3a'
+GPU_INSTANCE='g4dn'
 
 info() {
   echo -e "\033[0;32m$1\033[0m"
@@ -24,12 +27,14 @@ usage() {
 Usage: $SELF [options] <ClusterName>
 
 Options:
+  --region                    : Set the AWS region ( Default: ${AWS_REGION} )
+  --zone                      : Set the AWS availability zones ( Default: ${AWS_ZONE} )
   --dry-run                   : Dry run AWS CDK deploy
   --domain   <base domain>    : Provide the base domain managed by AWS Route 53
+  --cpuInstanceType           : Set the EKS default CPU instance type ( Default: ${CPU_INSTANCE} )
+  --gpuInstanceType           : Set the EKS default GPU instance type ( Default: ${GPU_INSTANCE} )
   -h, --help                  : Show this message
 EOF
-  # --region                    : Set the AWS region ( Default: ${AWS_REGION} )
-  # --zone                      : Set the AWS availability zones ( Default: ${AWS_ZONE} )
 }
 
 node::version() {
@@ -50,6 +55,7 @@ cdk::context() {
     export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
   fi
   export NAME=${NAME:-'cdk'}
+  export AWS_ACCOUNT=$(aws sts get-caller-identity | grep "Account" | sed 's/.*Account": "\(.*\)",/\1/')
 
   if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"' > /dev/null ); then
     info "[Create] CDK context"
@@ -63,6 +69,10 @@ cdk::context() {
       -c clusterType=dev-eks \
       -c username=$USERNAME \
       -c name=$NAME \
+      -c region=$AWS_REGION \
+      -c zone=$AWS_ZONE \
+      -c cpuInstance=$CPU_INSTANCE \
+      -c gpuInstance=$GPU_INSTANCE \
       -c basedDomain=$AWS_BASED_DOMAIN \
       -c primehubPassword=$PH_PASSWORD \
       -c keycloakPassword=$KC_PASSWORD \
@@ -78,6 +88,9 @@ cdk::context() {
 }
 
 cdk::deploy() {
+  info "[Bootstrap] aws://${AWS_ACCOUNT}/${AWS_REGION}"
+  cdk bootstrap aws://${AWS_ACCOUNT}/${AWS_REGION}
+
   info "[Deploy] eks-$NAME by $USERNAME"
   cdk deploy
 }
@@ -91,14 +104,22 @@ cdk::dry() {
 args::parse() {
   while (( "$#" )); do
     case "${1:-}" in
-      # --region)
-      #   shift
-      #   AWS_REGION=${1}
-      # ;;
-      # --zone)
-      #   shift
-      #   AWS_ZONE=${1}
-      # ;;
+      --region)
+        shift
+        AWS_REGION=${1}
+      ;;
+      --zone)
+        shift
+        AWS_ZONE=${1}
+      ;;
+      --cpuInstanceType)
+        shift
+        CPU_INSTANCE=${1}
+      ;;
+      --gpuInstanceType)
+        shift
+        GPU_INSTANCE=${1}
+      ;;
       --dry-run)
         DRY_MODE=true
       ;;

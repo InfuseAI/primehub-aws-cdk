@@ -13,6 +13,9 @@ const name = app.node.tryGetContext('name') || process.env.NAME || 'cdk';
 const basedDomain = app.node.tryGetContext('basedDomain') || process.env.AWS_BASED_DOMAIN || '';
 const primehubPassword = app.node.tryGetContext('primehubPassword') || process.env.PH_PASSWORD || crypto.randomBytes(32).toString('hex');
 const keycloakPassword = app.node.tryGetContext('keycloakPassword') || process.env.KC_PASSWORD || crypto.randomBytes(32).toString('hex');
+const zone = app.node.tryGetContext('zone') || 'a';
+const cpuInstance = app.node.tryGetContext('cpuInstance') || 't3a';
+const gpuInstance = app.node.tryGetContext('gpuInstance') || 'g4dn';
 
 const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
   env: env,
@@ -21,6 +24,9 @@ const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
   basedDomain: basedDomain,
   keycloakPassword: keycloakPassword,
   primehubPassword: primehubPassword,
+  availabilityZone: `${env.region}${zone}`,
+  cpuInstance: cpuInstance,
+  gpuInstance: gpuInstance,
 });
 
 cdk.Tags.of(eksClusterStack).add("owner", username);
