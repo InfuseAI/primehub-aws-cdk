@@ -17,6 +17,9 @@ export interface EksStackProps extends cdk.StackProps {
   basedDomain:  string;
   primehubPassword: string;
   keycloakPassword: string;
+  availabilityZone: string;
+  cpuInstance: string;
+  gpuInstance: string;
   masterRole?:  string;
 }
 
@@ -27,7 +30,7 @@ export class EKSCluster extends cdk.Stack {
     let primehubDomain;
     const env: cdk.Environment = props.env || {};
     const account: string  = env.account || '';
-    const region: string = env.region || 'ap-northeast-1';
+    const region: string = env.region || '';
     const clusterName = `eks-${props.name}`;
 
     const vpc = new ec2.Vpc(this, 'vpc', {
@@ -64,8 +67,8 @@ export class EKSCluster extends cdk.Stack {
       desiredSize: 1,
       minSize: 1,
       maxSize: 3,
-      instanceTypes: [new InstanceType('t3a.xlarge')],
-      subnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: ['ap-northeast-1a']},
+      instanceTypes: [new InstanceType(`${props.cpuInstance}.xlarge`)],
+      subnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       tags: {
         Name: `${clusterName}-default-node-group`,
         cluster: clusterName,
@@ -79,8 +82,8 @@ export class EKSCluster extends cdk.Stack {
       desiredCapacity: 0,
       minCapacity: 0,
       maxCapacity: 2,
-      instanceType: new InstanceType('t3a.xlarge'),
-      vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: ['ap-northeast-1a']},
+      instanceType: new InstanceType(`${props.cpuInstance}.xlarge`),
+      vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       bootstrapOptions: {
         kubeletExtraArgs: "--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user --register-with-taints=hub.jupyter.org/dedicated=user:NoSchedule",
       },
@@ -101,8 +104,8 @@ export class EKSCluster extends cdk.Stack {
       desiredCapacity: 0,
       minCapacity: 0,
       maxCapacity: 2,
-      instanceType: new InstanceType('g4dn.xlarge'),
-      vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: ['ap-northeast-1a']},
+      instanceType: new InstanceType(`${props.gpuInstance}.xlarge`),
+      vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       bootstrapOptions: {
         kubeletExtraArgs: "--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user,nvidia.com/gpu=true --register-with-taints=nvidia.com/gpu=true:NoSchedule",
         dockerConfigJson: '{ "exec-opts": ["native.cgroupdriver=systemd"] }',
@@ -203,6 +206,9 @@ export class EKSCluster extends cdk.Stack {
       const hostedZone =  route53.HostedZone.fromLookup(this, 'Domain', {
         domainName: props.basedDomain
       });
+
+      let hostedZoneID = EKSCluster.getELBHostedZoneID(region);
+
       new route53.ARecord(this, 'ARecord', {
         zone: hostedZone,
         recordName: `*.${clusterName}.${props.basedDomain}.`,
@@ -210,7 +216,7 @@ export class EKSCluster extends cdk.Stack {
           bind() {
             return {
               dnsName: awsElbAddress.value,
-              hostedZoneId: 'Z31USIVHYNEOWT',
+              hostedZoneId: hostedZoneID,
             };
           },
         }),
@@ -244,5 +250,41 @@ export class EKSCluster extends cdk.Stack {
     cdk.Tags.of(eksCluster).add('owner', props.username);
     cdk.Tags.of(eksCluster).add('clusterName', clusterName);
     cdk.Tags.of(eksCluster).add('clusterType', 'dev-eks');
+  }
+
+  static getELBHostedZoneID(region: string): string {
+    interface RegionMap {
+      [name: string]: string
+    }
+
+    const nlbServiceEndpoints: RegionMap = {
+      "us-east-2":      "ZLMOA37VPKANP",
+      "us-east-1":      "Z26RNL4JYFTOTI",
+      "us-west-1":      "Z24FKFUX50B4VW",
+      "us-west-2":      "Z18D5FSROUN65G",
+      "af-south-1":     "Z203XCE67M25HM",
+      "ap-east-1":      "Z12Y7K3UBGUAD1",
+      "ap-south-1":     "ZVDDRBQ08TROA",
+      "ap-northeast-3": "Z1GWIQ4HH19I5X",
+      "ap-northeast-2": "ZIBE1TIR4HY56",
+      "ap-southeast-1": "ZKVM4W9LS7TM",
+      "ap-southeast-2": "ZCT6FZBF4DROD",
+      "ap-northeast-1": "Z31USIVHYNEOWT",
+      "ca-central-1":   "Z2EPGBW3API2WT",
+      "cn-north-1":     "Z3QFB96KMJ7ED6",
+      "cn-northwest-1": "ZQEIKTCZ8352D",
+      "eu-central-1":   "Z3F0SRJ5LGBH90",
+      "eu-west-1":      "Z2IFOLAFXWLO4F",
+      "eu-west-2":      "ZD4D7Y8KGAS4G",
+      "eu-south-1":     "Z23146JA1KNAFP",
+      "eu-west-3":      "Z1CMS0P5QUZ6D5",
+      "eu-north-1":     "Z1UDT6IFJ4EJM",
+      "me-south-1":     "Z3QSRYVP46NYYV",
+      "sa-east-1":      "ZTK26PT1VY4CU",
+      "us-gov-east-1":  "Z1ZSMQQ6Q24QQ8",
+      "us-gov-west-1":  "ZMG1MZ2THAWF1",
+    }
+
+    return nlbServiceEndpoints[region] || '';
   }
 }
