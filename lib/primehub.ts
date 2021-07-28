@@ -5,16 +5,17 @@ import * as s3deploy from '@aws-cdk/aws-s3-deployment';
 import * as crypto from 'crypto';
 import * as YAML from 'yaml';
 import { writeFileSync, mkdirSync}  from 'fs';
-import { RemovalPolicy } from '@aws-cdk/aws-s3/node_modules/@aws-cdk/core';
 
 export interface PrimeHubProps {
     eksCluster: eks.ICluster,
     clusterName: string,
+    primehubMode: string,
     primehubDomain: string,
     primehubPassword: string,
     keycloakPassword: string,
     account: string,
-    region: string
+    region: string,
+    sharedVolumeStorageClass?: string,
 }
 
 interface HelmValues {
@@ -40,8 +41,9 @@ export class PrimeHub extends cdk.Construct {
             },
             primehub: {
                 domain: props.primehubDomain,
-                mode: 'ee',
+                mode: props.primehubMode,
                 scheme: 'https',
+                sharedVolumeStorageClass: props.sharedVolumeStorageClass,
             },
             keycloak: {
                 password: props.keycloakPassword,
@@ -121,11 +123,12 @@ export class PrimeHub extends cdk.Construct {
             wait: false,
         });
 
-        const primehubEnv = `PRIMEHUB_MODE=ee
+        const primehubEnv = `PRIMEHUB_MODE=${props.primehubMode}
 PRIMEHUB_NAMESPACE=hub
 PRIMEHUB_DOMAIN=${props.primehubDomain}
 PRIMEHUB_SCHEME=https
 PRIMEHUB_STORAGE_CLASS=gp2
+GROUP_VOLUME_STORAGE_CLASS=${props.sharedVolumeStorageClass}
 KC_DOMAIN=${props.primehubDomain}
 KC_SCHEME=https
 KC_USER=keycloak
@@ -146,7 +149,7 @@ KEYCLOAK_DEPLOY=true`;
         // Create S3 bucket to store primehub.yaml
         const bucket = new s3.Bucket(this, `${props.clusterName}-s3-bucket`, {
           autoDeleteObjects: true,
-          removalPolicy: RemovalPolicy.DESTROY,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
           bucketName: props.clusterName,
         });
 
