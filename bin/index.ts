@@ -10,6 +10,7 @@ const env = {
 };
 const username = app.node.tryGetContext('username') || process.env.USERNAME || 'dev@infuseai.io';
 const name = app.node.tryGetContext('name') || process.env.NAME || 'cdk';
+const primehubMode = app.node.tryGetContext('primehubMode') || process.env.PRIMEHUB_MODE || 'ee';
 const basedDomain = app.node.tryGetContext('basedDomain') || process.env.AWS_BASED_DOMAIN || '';
 const primehubPassword = app.node.tryGetContext('primehubPassword') || process.env.PH_PASSWORD || crypto.randomBytes(32).toString('hex');
 const keycloakPassword = app.node.tryGetContext('keycloakPassword') || process.env.KC_PASSWORD || crypto.randomBytes(32).toString('hex');
@@ -21,6 +22,7 @@ const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
   env: env,
   name: name,
   username: username,
+  primehubMode: primehubMode,
   basedDomain: basedDomain,
   keycloakPassword: keycloakPassword,
   primehubPassword: primehubPassword,

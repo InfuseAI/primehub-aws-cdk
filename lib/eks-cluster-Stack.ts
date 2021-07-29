@@ -16,6 +16,7 @@ import { AwsEfsCsiDriver } from './aws-efs-csi-driver';
 export interface EksStackProps extends cdk.StackProps {
   name:  string;
   username: string;
+  primehubMode: string;
   basedDomain:  string;
   primehubPassword: string;
   keycloakPassword: string;
@@ -202,7 +203,8 @@ export class EKSCluster extends cdk.Stack {
           effect: iam.Effect.ALLOW,
           actions: [
             "elasticfilesystem:DescribeAccessPoints",
-            "elasticfilesystem:DescribeFileSystems"
+            "elasticfilesystem:DescribeFileSystems",
+            "elasticfilesystem:Client*"
           ]
         }),
         new iam.PolicyStatement({
