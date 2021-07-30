@@ -1,9 +1,12 @@
+import s3 = require('@aws-cdk/aws-s3');
 import iam = require('@aws-cdk/aws-iam');
 import ec2 = require('@aws-cdk/aws-ec2');
 import efs = require('@aws-cdk/aws-efs');
 import eks = require('@aws-cdk/aws-eks');
 import cdk = require('@aws-cdk/core');
 import route53 = require('@aws-cdk/aws-route53');
+import crypto = require('crypto');
+
 
 import { InstanceType } from '@aws-cdk/aws-ec2';
 import { ClusterAutoScaler } from './cluster-autoscaler';
@@ -242,6 +245,37 @@ export class EKSCluster extends cdk.Stack {
       username: props.username
     })
 
+    // AWS S3
+    const randomHash = crypto.randomBytes(8).toString('hex');
+    const primehubStoreBucket = `${clusterName}-store-${randomHash}`;
+    const primehubConfigBucket = `${clusterName}-${randomHash}`;
+    // Create S3 bucket to store primehub.yaml
+    const s3StoreBucket = new s3.Bucket(this, `${primehubStoreBucket}-s3-bucket`, {
+      autoDeleteObjects: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      bucketName: primehubStoreBucket,
+    });
+    const s3Policy = new iam.Policy(this, 's3-store-bucket-policy', {
+      policyName: "S3StoreBucketPolicy",
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ["s3:*"],
+          resources: [`arn:aws:s3:::${primehubStoreBucket}/*`]
+        }),
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "s3:*",
+          ],
+          resources: [`arn:aws:s3:::${primehubStoreBucket}`]
+        })
+      ]
+    });
+    s3Policy.attachToRole(defaultNodeGroup.role);
+    s3Policy.attachToRole(cpuASG.role);
+    s3Policy.attachToRole(gpuASG.role);
+
     const ingressNginx = new IngressNginxController(this, 'ingress-nginx-controller', {
       eksCluster: eksCluster,
     });
@@ -293,13 +327,16 @@ export class EKSCluster extends cdk.Stack {
       keycloakPassword: props.keycloakPassword,
       account: account,
       region: region,
-      sharedVolumeStorageClass: 'efs-sc'
+      sharedVolumeStorageClass: 'efs-sc',
+      primehubStoreBucket: primehubStoreBucket,
+      primehubConfigBucket: primehubConfigBucket
     });
 
     const primehubReadyHelmCharts = new cdk.ConcreteDependable();
     primehubReadyHelmCharts.add(ingressNginx);
     primehubReadyHelmCharts.add(certManager);
     primehubReadyHelmCharts.add(csiDriver);
+    primehubReadyHelmCharts.add(s3StoreBucket);
     primehub.node.addDependency(primehubReadyHelmCharts);
 
     new cdk.CfnOutput(this, 'PrimeHub URL', {value: `https://${primehubDomain}`});

@@ -15,7 +15,9 @@ export interface PrimeHubProps {
     keycloakPassword: string,
     account: string,
     region: string,
+    primehubConfigBucket: string,
     sharedVolumeStorageClass?: string,
+    primehubStoreBucket?: string,
 }
 
 interface HelmValues {
@@ -32,6 +34,8 @@ export class PrimeHub extends cdk.Construct {
 
         const graphqlSecretKey = scope.node.tryGetContext('GraphqlSecretKey') || process.env.ADMIN_UI_GRAPHQL_SECRET_KEY || crypto.randomBytes(32).toString('hex');
         const hubProxySecretKey = scope.node.tryGetContext('HubProxySecretKey') || process.env.HUB_PROXY_SECRET_TOKEN || crypto.randomBytes(32).toString('hex');
+
+        const enabledPrimeHubStore = (props.primehubStoreBucket) ? true : false;
 
         const helmValues = {
             customImage: {
@@ -76,6 +80,18 @@ export class PrimeHub extends cdk.Construct {
             },
             usage: {
               dbStorageClass: 'gp2'
+            },
+            store: {
+              enabled: enabledPrimeHubStore,
+              bucket: props.primehubStoreBucket,
+            },
+            minio: {
+              s3gatway: {
+                enabled: enabledPrimeHubStore,
+                serviceEndpoint: `https://s3.${props.region}.amazonaws.com/`,
+                accessKey: null,
+                secretKey: null
+              }
             },
             jupyterhub: {
                 auth: {
@@ -152,10 +168,10 @@ KEYCLOAK_DEPLOY=true`;
         writeFileSync(`./artifact/${props.clusterName}/.env`, primehubEnv);
 
         // Create S3 bucket to store primehub.yaml
-        const bucket = new s3.Bucket(this, `${props.clusterName}-s3-bucket`, {
+        const bucket = new s3.Bucket(this, `${props.primehubConfigBucket}-s3-bucket`, {
           autoDeleteObjects: true,
           removalPolicy: cdk.RemovalPolicy.DESTROY,
-          bucketName: props.clusterName,
+          bucketName: props.primehubConfigBucket,
         });
 
         new s3deploy.BucketDeployment(this, 'primehub-yaml', {
