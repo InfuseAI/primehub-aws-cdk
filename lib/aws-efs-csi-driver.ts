@@ -33,7 +33,7 @@ export class AwsEfsCsiDriver extends cdk.Construct {
             parameters: {
               provisioningMode: "efs-ap",
               fileSystemId: props.fileSystemID,
-              directoryPerms: "700",
+              directoryPerms: "777",
               gidRangeStart: "1000",
               gidRangeEnd: "2000",
             }

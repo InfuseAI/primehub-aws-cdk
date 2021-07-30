@@ -72,6 +72,9 @@ export class PrimeHub extends cdk.Construct {
             graphql: {
                 sharedGraphqlSecret: graphqlSecretKey
             },
+            usage: {
+              dbStorageClass: 'gp2'
+            },
             jupyterhub: {
                 auth: {
                     state: {
