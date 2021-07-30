@@ -43,7 +43,9 @@ export class PrimeHub extends cdk.Construct {
                 domain: props.primehubDomain,
                 mode: props.primehubMode,
                 scheme: 'https',
-                sharedVolumeStorageClass: props.sharedVolumeStorageClass,
+                // Temporarily disable EFS storage class and wait the csi-driver PR merged
+                //   https://github.com/kubernetes-sigs/aws-efs-csi-driver/pull/434
+                // sharedVolumeStorageClass: props.sharedVolumeStorageClass,
             },
             keycloak: {
                 password: props.keycloakPassword,
