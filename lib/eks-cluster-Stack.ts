@@ -1,5 +1,6 @@
 import iam = require('@aws-cdk/aws-iam');
 import ec2 = require('@aws-cdk/aws-ec2');
+import efs = require('@aws-cdk/aws-efs');
 import eks = require('@aws-cdk/aws-eks');
 import cdk = require('@aws-cdk/core');
 import route53 = require('@aws-cdk/aws-route53');
@@ -10,10 +11,12 @@ import { IngressNginxController } from './nginx-ingress';
 import { CertManager } from './cert-manager';
 import { PrimeHub } from './primehub';
 import { NvidiaDevicePlugin } from './nvidia-device-plugin';
+import { AwsEfsCsiDriver } from './aws-efs-csi-driver';
 
 export interface EksStackProps extends cdk.StackProps {
   name:  string;
   username: string;
+  primehubMode: string;
   basedDomain:  string;
   primehubPassword: string;
   keycloakPassword: string;
@@ -184,6 +187,61 @@ export class EKSCluster extends cdk.Stack {
       wait: false,
     });
 
+    // AWS EFS
+    const efsFileSystem = new efs.FileSystem(this, 'efs-file-system', {
+      fileSystemName: `efs-${clusterName}`,
+      vpc: vpc,
+      vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
+      securityGroup: eksCluster.clusterSecurityGroup,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+    const efsPolicy = new iam.Policy(this, 'efs-full-access-policy', {
+      policyName: "EFSFullAccessPolicy",
+      statements: [
+        new iam.PolicyStatement({
+          resources: ["*"],
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "elasticfilesystem:DescribeAccessPoints",
+            "elasticfilesystem:DescribeFileSystems",
+            "elasticfilesystem:Client*"
+          ]
+        }),
+        new iam.PolicyStatement({
+          resources: ["*"],
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "elasticfilesystem:CreateAccessPoint"
+          ],
+          conditions: {
+            "StringLike": {
+              "aws:RequestTag/efs.csi.aws.com/cluster": "true"
+            }
+          }
+        }),
+        new iam.PolicyStatement({
+          resources: ["*"],
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "elasticfilesystem:DeleteAccessPoint"
+          ],
+          conditions: {
+            "StringLike": {
+              "aws:RequestTag/efs.csi.aws.com/cluster": "true"
+            }
+          }
+        }),
+      ]
+    });
+    efsPolicy.attachToRole(defaultNodeGroup.role);
+    efsPolicy.attachToRole(cpuASG.role);
+    efsPolicy.attachToRole(gpuASG.role);
+    const csiDriver = new AwsEfsCsiDriver(this, 'aws-efs-csi-driver', {
+      eksCluster: eksCluster,
+      fileSystemID: efsFileSystem.fileSystemId,
+      username: props.username
+    })
+
     const ingressNginx = new IngressNginxController(this, 'ingress-nginx-controller', {
       eksCluster: eksCluster,
     });
@@ -229,16 +287,19 @@ export class EKSCluster extends cdk.Stack {
     const primehub = new PrimeHub(this, 'primehub', {
       eksCluster: eksCluster,
       clusterName: clusterName,
+      primehubMode: 'ee',
       primehubDomain: primehubDomain,
       primehubPassword: props.primehubPassword,
       keycloakPassword: props.keycloakPassword,
       account: account,
-      region: region
+      region: region,
+      sharedVolumeStorageClass: 'efs-sc'
     });
 
     const primehubReadyHelmCharts = new cdk.ConcreteDependable();
     primehubReadyHelmCharts.add(ingressNginx);
     primehubReadyHelmCharts.add(certManager);
+    primehubReadyHelmCharts.add(csiDriver);
     primehub.node.addDependency(primehubReadyHelmCharts);
 
     new cdk.CfnOutput(this, 'PrimeHub URL', {value: `https://${primehubDomain}`});
