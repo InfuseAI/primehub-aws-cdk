@@ -86,7 +86,7 @@ export class PrimeHub extends cdk.Construct {
               bucket: props.primehubStoreBucket,
             },
             minio: {
-              s3gatway: {
+              s3gateway: {
                 enabled: enabledPrimeHubStore,
                 serviceEndpoint: `https://s3.${props.region}.amazonaws.com/`,
                 accessKey: null,
