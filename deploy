@@ -4,6 +4,7 @@ set -eo pipefail
 NAME=
 DRY_MODE=false
 PRIMEHUB_MODE=ee
+K8S_INFRA_ONLY=false
 AWS_ACCOUNT=${AWS_ACCOUNT:-}
 AWS_REGION=${AWS_REGION:-}
 AWS_ZONE=${AWS_ZONE:-a}
@@ -82,6 +83,7 @@ cdk::context() {
       -c keycloakPassword=$KC_PASSWORD \
       -c GraphqlSecretKey=$ADMIN_UI_GRAPHQL_SECRET_KEY \
       -c HubProxySecretKey=$HUB_PROXY_SECRET_TOKEN \
+      -c k8sInfraOnly=$K8S_INFRA_ONLY \
       --json --strict > cdk.context.tmp
       mv cdk.context.tmp cdk.context.json
       cdk context
@@ -139,6 +141,9 @@ args::parse() {
       --domain)
         shift
         AWS_BASED_DOMAIN=${1}
+      ;;
+      --k8s-infra)
+        K8S_INFRA_ONLY=true
       ;;
       -h|--help)
         usage

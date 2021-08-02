@@ -27,6 +27,7 @@ export interface EksStackProps extends cdk.StackProps {
   cpuInstance: string;
   gpuInstance: string;
   masterRole?:  string;
+  k8sInfraOnly?: string;
 }
 
 export class EKSCluster extends cdk.Stack {
@@ -246,7 +247,7 @@ export class EKSCluster extends cdk.Stack {
     })
 
     // AWS S3
-    const randomHash = crypto.randomBytes(8).toString('hex');
+    const randomHash = crypto.randomBytes(4).toString('hex');
     const primehubStoreBucket = `${clusterName}-store-${randomHash}`;
     const primehubConfigBucket = `${clusterName}-${randomHash}`;
     // Create S3 bucket to store primehub.yaml
@@ -261,14 +262,10 @@ export class EKSCluster extends cdk.Stack {
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: ["s3:*"],
-          resources: [`arn:aws:s3:::${primehubStoreBucket}/*`]
-        }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "s3:*",
-          ],
-          resources: [`arn:aws:s3:::${primehubStoreBucket}`]
+          resources: [
+            `arn:aws:s3:::${primehubStoreBucket}/*`,
+            `arn:aws:s3:::${primehubStoreBucket}`
+          ]
         })
       ]
     });
@@ -318,6 +315,7 @@ export class EKSCluster extends cdk.Stack {
       primehubDomain = awsElbAddress.value;
     }
 
+    const dryRunMode = ( props.k8sInfraOnly == 'true' );
     const primehub = new PrimeHub(this, 'primehub', {
       eksCluster: eksCluster,
       clusterName: clusterName,
@@ -329,7 +327,8 @@ export class EKSCluster extends cdk.Stack {
       region: region,
       sharedVolumeStorageClass: 'efs-sc',
       primehubStoreBucket: primehubStoreBucket,
-      primehubConfigBucket: primehubConfigBucket
+      primehubConfigBucket: primehubConfigBucket,
+      dryRunMode: dryRunMode
     });
 
     const primehubReadyHelmCharts = new cdk.ConcreteDependable();
@@ -339,6 +338,8 @@ export class EKSCluster extends cdk.Stack {
     primehubReadyHelmCharts.add(s3StoreBucket);
     primehub.node.addDependency(primehubReadyHelmCharts);
 
+    new cdk.CfnOutput(this, 'PrimeHub Store S3 Bucket', {value: primehubStoreBucket});
+    new cdk.CfnOutput(this, 'PrimeHub Config S3 Bucket', {value: primehubConfigBucket});
     new cdk.CfnOutput(this, 'PrimeHub URL', {value: `https://${primehubDomain}`});
     new cdk.CfnOutput(this, 'PrimeHub Account', {value: 'phadmin'});
     new cdk.CfnOutput(this, 'PrimeHub Password', {value: props.primehubPassword});

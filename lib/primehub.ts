@@ -18,6 +18,7 @@ export interface PrimeHubProps {
     primehubConfigBucket: string,
     sharedVolumeStorageClass?: string,
     primehubStoreBucket?: string,
+    dryRunMode?: boolean
 }
 
 interface HelmValues {
@@ -84,6 +85,9 @@ export class PrimeHub extends cdk.Construct {
             store: {
               enabled: enabledPrimeHubStore,
               bucket: props.primehubStoreBucket,
+              createBucket: {
+                enabled: false
+              },
             },
             minio: {
               s3gateway: {
@@ -132,17 +136,19 @@ export class PrimeHub extends cdk.Construct {
             },
         } as HelmValues
 
-        // Apply PrimeHub helm chart
-        props.eksCluster.addHelmChart('primehub', {
-            chart: 'primehub',
-            repository: 'https://charts.infuseai.io',
-            createNamespace: true,
-            namespace: 'hub',
-            release: 'primehub',
-            values: helmValues,
-            timeout: cdk.Duration.minutes(15),
-            wait: false,
-        });
+        if (!props.dryRunMode) {
+          // Apply PrimeHub helm chart
+          props.eksCluster.addHelmChart('primehub', {
+              chart: 'primehub',
+              repository: 'https://charts.infuseai.io',
+              createNamespace: true,
+              namespace: 'hub',
+              release: 'primehub',
+              values: helmValues,
+              timeout: cdk.Duration.minutes(15),
+              wait: false,
+          });
+        }
 
         const primehubEnv = `PRIMEHUB_MODE=${props.primehubMode}
 PRIMEHUB_NAMESPACE=hub
