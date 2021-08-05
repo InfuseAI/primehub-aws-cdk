@@ -17,6 +17,7 @@ const keycloakPassword = app.node.tryGetContext('keycloakPassword') || process.e
 const zone = app.node.tryGetContext('zone') || 'a';
 const cpuInstance = app.node.tryGetContext('cpuInstance') || 't3a';
 const gpuInstance = app.node.tryGetContext('gpuInstance') || 'g4dn';
+const k8sInfraOnly = app.node.tryGetContext('k8sInfraOnly') || 'false';
 
 const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
   env: env,
@@ -29,6 +30,7 @@ const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
   availabilityZone: `${env.region}${zone}`,
   cpuInstance: cpuInstance,
   gpuInstance: gpuInstance,
+  k8sInfraOnly: k8sInfraOnly
 });
 
 cdk.Tags.of(eksClusterStack).add("owner", username);

@@ -1,0 +1,119 @@
+#! /bin/bash
+IFS=$'\t'
+set -eo pipefail
+
+NAME=${NAME}
+AWS_REGION=${AWS_REGION}
+
+info() {
+  echo -e "\033[0;32m$1\033[0m"
+}
+
+warn() {
+  echo -e "\033[0;93m$1\033[0m"
+}
+
+error() {
+
+  echo -e "\033[0;91m$1\033[0m" >&2
+}
+
+function usage() {
+  local SELF=`basename $0`
+  cat <<EOF
+Usage: $SELF [options] [<ClusterName>]
+
+Options:
+  --region                    : Set the AWS region
+  -h, --help                  : Show this message
+EOF
+}
+
+function replace_domain() {
+  local elb_domain=$1
+
+  local extension=''
+  if [[ "$(uname)" == "Darwin" ]]; then
+    extension=".bak"
+  fi
+
+  info "[Patch] ELB Domain -> ${elb_domain}"
+  k8s_context=$(kubectl config current-context)
+  sed -i ${extension} "s/\${Token.*}/${elb_domain}/g" ~/.primehub/config/${k8s_context}/.env
+  sed -i ${extension} "s/\${Token.*}/${elb_domain}/g" ~/.primehub/config/${k8s_context}/helm_override/primehub.yaml
+}
+
+function connect() {
+  if [ "${AWS_REGION}" == "" ]; then
+    AWS_REGION=$(cdk context -j | grep '"region":' | awk '{print $2}' | sed 's/"\(.*\)",/\1/g' || echo "")
+  fi
+  if [ "${NAME}" == "" ]; then
+    NAME=$(cdk context -j | grep '"name":' | awk '{print $2}' | sed 's/"\(.*\)",/\1/g' || echo "cdk")
+  fi
+  if [ "${AWS_REGION}" != "" ]; then
+    cf_output=$(aws cloudformation describe-stacks --stack-name eks-${NAME}-cdk-stack --region ${AWS_REGION} --query "Stacks[0].Outputs[*]" --output text)
+  else
+    cf_output=$(aws cloudformation describe-stacks --stack-name eks-${NAME}-cdk-stack --query "Stacks[0].Outputs[*]" --output text)
+  fi
+
+  cluster_name=$(echo ${cf_output} | grep ^ClusterClusterName | awk '{print $2}')
+  k8s_context_cmd="$(echo ${cf_output} | grep ^ClusterConfigCommand | awk '{$1 = ""; print $0;}') --alias $cluster_name"
+  config_bucket=$(echo ${cf_output} | grep ^PrimeHubConfigS3Bucket | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+
+  info "[Connect] EKS Cluster ${cluster_name}"
+  eval "$k8s_context_cmd"
+
+  info "[Fetch] PrimeHub Config from S3 bucket ${config_bucket}"
+  k8s_context=$(kubectl config current-context)
+  mkdir -p ~/.primehub/coonfig/$k8s_context/helm_override
+  aws s3 cp s3://${config_bucket}/.env ~/.primehub/config/${k8s_context}
+  aws s3 cp s3://${config_bucket}/helm_override/primehub.yaml ~/.primehub/config/${k8s_context}/helm_override/
+
+  info "[PrimeHub] Config"
+  AWS_ELB_DOMAIN=$(echo ${cf_output} | grep ^AWSELBDomain | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+  PRIMEHUB_URL=$(echo ${cf_output} | grep ^PrimeHubURL | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+  KC_URL="${PRIMEHUB_URL}/auth"
+  PH_USER=$(echo ${cf_output} | grep ^PrimeHubAccount | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+  PH_PASSWORD=$(echo ${cf_output} | grep ^PrimeHubPassword | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+  KC_USER=$(echo ${cf_output} | grep ^KeycloakAccount | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+  KC_PASSWORD=$(echo ${cf_output} | grep ^KeycloakPassword | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+
+  echo ""
+  echo "  AWS ELB Domain: ${AWS_ELB_DOMAIN}"
+  echo "  PrimeHub:       ${PRIMEHUB_URL}  ( ${PH_USER} / ${PH_PASSWORD} )"
+  echo "  Id Server:      ${KC_URL}/admin/ ( ${KC_USER} / ${KC_PASSWORD} )"
+  echo ""
+
+  if [ "${PRIMEHUB_URL}" == "https://${AWS_ELB_DOMAIN}" ]; then
+    replace_domain ${AWS_ELB_DOMAIN}
+  fi
+}
+
+function main() {
+  while (( "$#" )); do
+    case "${1:-}" in
+      --region)
+        shift
+        AWS_REGION=${1}
+      ;;
+      -h|--help)
+        usage
+        exit 0
+      ;;
+      *)
+        if [ "${NAME}" == "" ]; then
+          NAME=$1
+        else
+          error "[Syntax error] Should only provide one cluster name"
+          usage
+          exit 1
+        fi
+      ;;
+    esac
+    shift || (usage; exit 1)
+  done
+
+  connect
+}
+
+main "$@"
