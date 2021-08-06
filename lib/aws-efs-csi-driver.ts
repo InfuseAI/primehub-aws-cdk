@@ -21,24 +21,28 @@ export class AwsEfsCsiDriver extends cdk.Construct {
 
     const helmValues = {
       replicaCount: 1,
-        controller: {
-          tags: {
-            "owner": props.username,
-            "clusterName": props.eksCluster.clusterName,
+      image: {
+        repository: "infuseai/aws-efs-csi-driver",
+        tag: "v1.3.3-dirty",
+      },
+      controller: {
+        tags: {
+          "owner": props.username,
+          "clusterName": props.eksCluster.clusterName,
+        }
+      },
+      storageClasses: [
+        {
+          name: "efs-sc",
+          parameters: {
+            provisioningMode: "efs-ap",
+            fileSystemId: props.fileSystemID,
+            directoryPerms: "777",
+            uid: "1000",
+            gid: "100",
           }
-        },
-        storageClasses: [
-          {
-            name: "efs-sc",
-            parameters: {
-              provisioningMode: "efs-ap",
-              fileSystemId: props.fileSystemID,
-              directoryPerms: "777",
-              gidRangeStart: "1000",
-              gidRangeEnd: "2000",
-            }
-          }
-        ]
+        }
+      ]
     } as HelmValues;
 
     props.eksCluster.addHelmChart('aws-efs-csi-driver',{
