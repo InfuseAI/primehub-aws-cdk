@@ -65,7 +65,7 @@ function connect() {
 
   info "[Fetch] PrimeHub Config from S3 bucket ${config_bucket}"
   k8s_context=$(kubectl config current-context)
-  mkdir -p ~/.primehub/coonfig/$k8s_context/helm_override
+  mkdir -p ~/.primehub/config/${k8s_context}/helm_override
   aws s3 cp s3://${config_bucket}/.env ~/.primehub/config/${k8s_context}/
   aws s3 cp s3://${config_bucket}/helm_override/primehub.yaml ~/.primehub/config/${k8s_context}/helm_override/
 
