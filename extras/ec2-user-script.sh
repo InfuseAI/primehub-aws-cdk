@@ -18,9 +18,9 @@ npm install -g yarn
 npm install -g aws-cdk
 
 echo "Download PrimeHub Starter"
-wget https://github.com/InfuseAI/primehub-aws-cdk/archive/refs/heads/feature/primehub-starter.zip
-unzip primehub-starter.zip
-cd primehub-aws-cdk-feature-primehub-starter/
+wget https://github.com/InfuseAI/primehub-aws-cdk/archive/refs/tags/cfTemplate-v3.7.0.zip
+unzip cfTemplate-v3.7.0.zip
+cd primehub-aws-cdk-cfTemplate-v3.7.0/
 
 # set cdk never asking for approval
 cp extras/cdk.json .
