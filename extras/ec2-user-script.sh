@@ -40,7 +40,7 @@ echo "GPU Instance Type: ${GPU_INSTANCE_TYPE}"
 
 echo "Deploy CDK ${AWS_STACK_NAME}"
 export AWS_REGION
-./deploy ${AWS_STACK_NAME} --region ${REGION} --zone ${AWS_ZONE} --cpuInstanceType ${CPU_INSTANCE_TYPE} --gpuInstanceType ${GPU_INSTANCE_TYPE} --mode ${PRIMEHUB_MODE}
+./deploy ${AWS_STACK_NAME} --region ${AWS_REGION} --zone ${AWS_ZONE} --cpuInstanceType ${CPU_INSTANCE_TYPE} --gpuInstanceType ${GPU_INSTANCE_TYPE} --mode ${PRIMEHUB_MODE}
 
 echo "Completed"
 exit 0
