@@ -19,6 +19,7 @@ Resources:
               # export vars
               export PRIMEHUB_MODE="${PrimeHubInstallMode}"
               export AWS_STACK_NAME="${AWS::StackName}"
+              export AWS_REGION="${AWS::Region}"
 
               ./run-cdk.sh
               /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource PrimeHubCDKBootstrapEC2

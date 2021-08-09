@@ -2,12 +2,11 @@
 set -eo pipefail
 
 NAME=
-USERNAME=
 DRY_MODE=false
 PRIMEHUB_MODE=ee
 K8S_INFRA_ONLY=false
 AWS_ACCOUNT=${AWS_ACCOUNT:-}
-AWS_REGION=${AWS_REGION:-$(aws configure get region)}
+AWS_REGION=${AWS_REGION:-$(aws configure get region || echo 'ap-northeast-1')}
 AWS_ZONE=${AWS_ZONE:-a}
 CPU_INSTANCE='t3a'
 GPU_INSTANCE='g4dn'
@@ -55,9 +54,7 @@ node::packages() {
 }
 
 cdk::context() {
-  if [ "${USERNAME}" != "" ]; then
-    export USERNAME
-  elif aws sts get-caller-identity | grep "Arn" | grep "assumed-role"; then
+  if aws sts get-caller-identity | grep "Arn" | grep "assumed-role"; then
     export USERNAME=$(aws sts get-caller-identity  | grep "Arn" | sed 's/.*:assumed-role\/\(.*\)\/.*/\1/')
   else
     export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
@@ -148,10 +145,6 @@ args::parse() {
       ;;
       --k8s-infra)
         K8S_INFRA_ONLY=true
-      ;;
-      --username)
-        shift
-        USERNAME=${1}
       ;;
       -h|--help)
         usage
