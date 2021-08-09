@@ -14,7 +14,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
               #!/bin/sh
-              curl -o run-cdk.sh https://raw.githubusercontent.com/InfuseAI/primehub-aws-cdk/feature/primehub-starter/extras/ec2-user-script.sh
+              curl -o run-cdk.sh https://github.com/InfuseAI/primehub-aws-cdk/blob/cfTemplate/extras/ec2-user-script.sh
               chmod a+x run-cdk.sh
 
               # export vars
@@ -82,9 +82,8 @@ Resources:
 Parameters:
   PrimeHubInstallMode:
     Type: String
-    Default: ce
+    Default: ee
     AllowedValues:
-      - ce
       - ee
-    Description: PrimeHub installion mode, Please enter ce or ee. Default is ce.
+    Description: PrimeHub Enterprise Edition Mode
 
