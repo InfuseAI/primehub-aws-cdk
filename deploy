@@ -2,6 +2,7 @@
 set -eo pipefail
 
 NAME=
+USERNAME=
 DRY_MODE=false
 PRIMEHUB_MODE=ee
 K8S_INFRA_ONLY=false
@@ -34,6 +35,7 @@ Options:
   --region                    : Set the AWS region ( Default: ${AWS_REGION} )
   --zone                      : Set the AWS availability zones ( Default: ${AWS_ZONE} )
   --dry-run                   : Dry run AWS CDK deploy
+  --k8s-infra                 : Only setup AWS ESK without installing PrimeHub
   --domain   <base domain>    : Provide the base domain managed by AWS Route 53
   --cpuInstanceType           : Set the EKS default CPU instance type ( Default: ${CPU_INSTANCE} )
   --gpuInstanceType           : Set the EKS default GPU instance type ( Default: ${GPU_INSTANCE} )
@@ -53,7 +55,9 @@ node::packages() {
 }
 
 cdk::context() {
-  if aws sts get-caller-identity | grep "Arn" | grep "assumed-role"; then
+  if [ "${USERNAME}" != "" ]; then
+    export USERNAME
+  elif aws sts get-caller-identity | grep "Arn" | grep "assumed-role"; then
     export USERNAME=$(aws sts get-caller-identity  | grep "Arn" | sed 's/.*:assumed-role\/\(.*\)\/.*/\1/')
   else
     export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
@@ -144,6 +148,10 @@ args::parse() {
       ;;
       --k8s-infra)
         K8S_INFRA_ONLY=true
+      ;;
+      --username)
+        shift
+        USERNAME=${1}
       ;;
       -h|--help)
         usage

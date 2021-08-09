@@ -24,9 +24,22 @@ cd primehub-aws-cdk-feature-primehub-starter/
 
 # set cdk never asking for approval
 cp extras/cdk.json .
-
 yarn install
-./deploy
-cat cdk.json
-cdk deploy
+
+echo "Prepare CDK"
+AWS_REGION='us-east-1'
+AWS_ZONE='a'
+CPU_INSTANCE_TYPE='t3'
+GPU_INSTANCE_TYPE='g4dn'
+echo "Name: ${AWS_STACK_NAME}"
+echo "Mode: ${PRIMEHUB_MODE}"
+echo "Region: ${AWS_REGION}"
+echo "Zone: ${AWS_ZONE}"
+echo "CPU Instance Type: ${CPU_INSTANCE_TYPE}"
+echo "GPU Instance Type: ${GPU_INSTANCE_TYPE}"
+
+echo "Deploy CDK ${AWS_STACK_NAME}"
+./deploy ${AWS_STACK_NAME} --region ${REGION} --zone ${AWS_ZONE} --cpuInstanceType ${CPU_INSTANCE_TYPE} --gpuInstanceType ${GPU_INSTANCE_TYPE} --username primehub-starter --mode ${PRIMEHUB_MODE}
+
+echo "Completed"
 exit 0
