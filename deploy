@@ -60,7 +60,7 @@ cdk::context() {
     export USERNAME=$(aws iam get-user | jq ".User.UserName" | sed -e 's/"//g')
   fi
   export NAME=${NAME:-'cdk'}
-  export AWS_ACCOUNT=$(aws sts get-caller-identity | grep "Account" | sed 's/.*Account": "\(.*\)",/\1/')
+  export AWS_ACCOUNT=$(aws sts get-caller-identity | grep "Account" | sed 's/.*Account": "\(.*\)",/\1/' | sed 's/ //g')
 
   if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"' > /dev/null ); then
     info "[Create] CDK context"
