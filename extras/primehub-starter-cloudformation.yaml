@@ -8,8 +8,7 @@ Resources:
         Timeout: PT1H
     Properties:
       ImageId: !FindInMap [ AmazonLinux2RegionMap202107212, !Ref 'AWS::Region', AMI ]
-      KeyName: "rd"
-      InstanceType: "t3a.micro"
+      InstanceType: "t3.micro"
       IamInstanceProfile: !Ref InstanceProfile
       UserData:
         Fn::Base64: !Sub |
