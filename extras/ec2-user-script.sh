@@ -21,7 +21,7 @@ echo "Download PrimeHub Starter"
 tag=${GIT_TAG:-cfTemplate}
 wget https://github.com/InfuseAI/primehub-aws-cdk/archive/refs/tags/${tag}.zip
 unzip ${tag}.zip
-cd primehub-aws-cdk-${tag}/
+cd $(unzip -Z -1 ${tag}.zip| head -1)
 
 # set cdk never asking for approval
 cp extras/cdk.json .
