@@ -5,7 +5,7 @@ on:
       - created
 
 jobs:
-  build_release_tarball:
+  release-one-click-cloudformation-template:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -17,7 +17,7 @@ jobs:
           GITHUB_TOKEN: ${{github.token}}
       - name: Release CloudFormation Template
         run: |
-          ./extra/release.sh ${{ github.event.release.tag_name }}
+          ./extras/release.sh ${{ github.event.release.tag_name }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
