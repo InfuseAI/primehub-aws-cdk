@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: PrimeHub Starter
+Resources:
+  PrimeHubCDKBootstrapEC2:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT1H
+    Properties:
+      ImageId: !FindInMap [ AmazonLinux2RegionMap202107212, !Ref 'AWS::Region', AMI ]
+      InstanceType: "t3.micro"
+      IamInstanceProfile: !Ref InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+              #!/bin/sh
+              curl -o run-cdk.sh https://raw.githubusercontent.com/InfuseAI/primehub-aws-cdk/cfTemplate/extras/ec2-user-script.sh
+              chmod a+x run-cdk.sh
+
+              # export vars
+              export PRIMEHUB_MODE="${PrimeHubInstallMode}"
+              export AWS_STACK_NAME="${AWS::StackName}"
+              export AWS_REGION="${AWS::Region}"
+
+              ./run-cdk.sh
+              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource PrimeHubCDKBootstrapEC2
+
+              # delete the starter stack
+              aws cloudformation delete-stack --stack-name --stack ${AWS::StackName} --region ${AWS::Region}
+      SecurityGroups:
+      - !Ref PrimeHubCDKBootstrapEC2SecurityGroup
+  AwsIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+        - arn:aws:iam::aws:policy/IAMReadOnlyAccess
+      Path: /
+      Policies:
+        - PolicyName: CdkPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Action:
+              - cloudformation:*
+              Resource: "*"
+              Effect: Allow
+            - Condition:
+                ForAnyValue:StringEquals:
+                  aws:CalledVia:
+                  - cloudformation.amazonaws.com
+              Action: "*"
+              Resource: "*"
+              Effect: Allow
+            - Action: s3:*
+              Resource: arn:aws:s3:::cdktoolkit-stagingbucket-*
+              Effect: Allow
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref AwsIamRole
+  PrimeHubCDKBootstrapEC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+        GroupDescription: PrimeHub CDK Bootstrap Security Group
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+Mappings:
+  AmazonLinux2RegionMap202107212:
+    'af-south-1':
+      AMI: 'ami-0edec67949fd25461'
+    'eu-north-1':
+      AMI: 'ami-0d441f5643da997cb'
+    'ap-south-1':
+      AMI: 'ami-04db49c0fb2215364'
+    'eu-west-3':
+      AMI: 'ami-0d49cec198762b78c'
+    'eu-west-2':
+      AMI: 'ami-0d26eb3972b7f8c96'
+    'eu-south-1':
+      AMI: 'ami-0fce326033a239d55'
+    'eu-west-1':
+      AMI: 'ami-02b4e72b17337d6c1'
+    'ap-northeast-3':
+      AMI: 'ami-0e787554e61105680'
+    'ap-northeast-2':
+      AMI: 'ami-0a0de518b1fc4524c'
+    'me-south-1':
+      AMI: 'ami-004b77593bd476317'
+    'ap-northeast-1':
+      AMI: 'ami-09ebacdc178ae23b7'
+    'sa-east-1':
+      AMI: 'ami-0f8243a5175208e08'
+    'ca-central-1':
+      AMI: 'ami-02f84cf47c23f1769'
+    'ap-east-1':
+      AMI: 'ami-0a2115f8cc0a3956b'
+    'ap-southeast-1':
+      AMI: 'ami-0f511ead81ccde020'
+    'ap-southeast-2':
+      AMI: 'ami-0aab712d6363da7f9'
+    'eu-central-1':
+      AMI: 'ami-0453cb7b5f2b7fca2'
+    'us-east-1':
+      AMI: 'ami-0c2b8ca1dad447f8a'
+    'us-east-2':
+      AMI: 'ami-0443305dabd4be2bc'
+    'us-west-1':
+      AMI: 'ami-04b6c97b14c54de18'
+    'us-west-2':
+      AMI: 'ami-083ac7c7ecf9bb9b0'
+Parameters:
+  PrimeHubInstallMode:
+    Type: String
+    Default: ee
+    AllowedValues:
+      - ee
+    Description: PrimeHub Enterprise Edition Mode
+
