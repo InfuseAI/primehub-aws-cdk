@@ -1,0 +1,41 @@
+name: "Release AWS One Click CloudFormation Template"
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  build_release_tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.2.2
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+      - name: Release CloudFormation Template
+        run: |
+          ./extra/release.sh ${{ github.event.release.tag_name }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: 'us-east-1'
+      - name: Update Release
+        id: update_release
+        uses: tubone24/update_release@v1.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          body: |
+            ## One Click Apply
+            Click it to create PrimeHub EKS by CloudFormation
+
+            - ### PrimeHub EE
+
+              [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?stackName=primehub-starter&templateURL=https://primehub.s3.amazonaws.com/cloudformation/${{ github.event.release.tag_name }}/primehub-starter-cloudformation.yaml)
+
+            - ### PrimeHub CE
+
+              [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?stackName=primehub-starter&templateURL=https://primehub.s3.amazonaws.com/cloudformation/${{ github.event.release.tag_name }}/primehub-ce-starter-cloudformation.yaml)

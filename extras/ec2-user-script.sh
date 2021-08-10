@@ -18,9 +18,10 @@ npm install -g yarn
 npm install -g aws-cdk
 
 echo "Download PrimeHub Starter"
-wget https://github.com/InfuseAI/primehub-aws-cdk/archive/refs/tags/cfTemplate.zip
-unzip cfTemplate.zip
-cd primehub-aws-cdk-cfTemplate/
+tag=${GIT_TAG:-cfTemplate}
+wget https://github.com/InfuseAI/primehub-aws-cdk/archive/refs/tags/${tag}.zip
+unzip ${tag}.zip
+cd primehub-aws-cdk-${tag}/
 
 # set cdk never asking for approval
 cp extras/cdk.json .
@@ -40,7 +41,7 @@ echo "GPU Instance Type: ${GPU_INSTANCE_TYPE}"
 
 echo "Deploy CDK ${AWS_STACK_NAME}"
 export AWS_REGION
-./deploy ${AWS_STACK_NAME} --region ${AWS_REGION} --zone ${AWS_ZONE} --cpuInstanceType ${CPU_INSTANCE_TYPE} --gpuInstanceType ${GPU_INSTANCE_TYPE} --mode ${PRIMEHUB_MODE}
+./deploy ${AWS_STACK_NAME} --region ${AWS_REGION} --zone ${AWS_ZONE} --cpuInstanceType ${CPU_INSTANCE_TYPE} --gpuInstanceType ${GPU_INSTANCE_TYPE} --mode ${PRIMEHUB_MODE} || exit 1
 
 echo "Completed"
 exit 0
