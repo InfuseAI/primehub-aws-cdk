@@ -32,7 +32,7 @@ AWS_REGION='us-east-1'
 AWS_ZONE='a'
 CPU_INSTANCE_TYPE='t3'
 GPU_INSTANCE_TYPE='g4dn'
-PASSWORD="$(openssl rand -hex 16))"
+PASSWORD="$(openssl rand -hex 16)"
 echo "Name: ${AWS_STACK_NAME}"
 echo "Mode: ${PRIMEHUB_MODE}"
 echo "Region: ${AWS_REGION}"
