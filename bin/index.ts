@@ -33,6 +33,9 @@ const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
   k8sInfraOnly: k8sInfraOnly
 });
 
+eksClusterStack.templateOptions.description = `Setup AWS EKS environment with PrimeHub by AWS CDK.
+For more information, please visit: https://github.com/InfuseAI/primehub-aws-cdk`;
+
 cdk.Tags.of(eksClusterStack).add("owner", username);
 cdk.Tags.of(eksClusterStack).add("clusterType", 'dev-eks');
 

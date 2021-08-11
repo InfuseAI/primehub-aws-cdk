@@ -10,7 +10,8 @@ AWS_REGION=${AWS_REGION:-$(aws configure get region || echo 'ap-northeast-1')}
 AWS_ZONE=${AWS_ZONE:-a}
 CPU_INSTANCE='t3a'
 GPU_INSTANCE='g4dn'
-
+PH_PASSWORD=''
+KC_PASSWORD=''
 
 info() {
   echo -e "\033[0;32m$1\033[0m"
@@ -38,6 +39,8 @@ Options:
   --domain   <base domain>    : Provide the base domain managed by AWS Route 53
   --cpuInstanceType           : Set the EKS default CPU instance type ( Default: ${CPU_INSTANCE} )
   --gpuInstanceType           : Set the EKS default GPU instance type ( Default: ${GPU_INSTANCE} )
+  --keycloak-password         : Set the password of Keycloak admin account
+  --primehub-password         : Set the password of PrimeHub default account
   -h, --help                  : Show this message
 EOF
 }
@@ -65,8 +68,8 @@ cdk::context() {
   if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"' > /dev/null ); then
     info "[Create] CDK context"
     AWS_BASED_DOMAIN=${AWS_BASED_DOMAIN:-''}
-    PH_PASSWORD=$(openssl rand -hex 16)
-    KC_PASSWORD=$(openssl rand -hex 16)
+    PH_PASSWORD=${PH_PASSWORD:-"$(openssl rand -hex 16)"}
+    KC_PASSWORD=${KC_PASSWORD:-"$(openssl rand -hex 16)"}
     ADMIN_UI_GRAPHQL_SECRET_KEY=$(openssl rand -hex 32)
     HUB_PROXY_SECRET_TOKEN=$(openssl rand -hex 32)
 
@@ -142,6 +145,14 @@ args::parse() {
       --domain)
         shift
         AWS_BASED_DOMAIN=${1}
+      ;;
+      --keycloak-password)
+        shift
+        KC_PASSWORD=${1}
+      ;;
+      --primehub-password)
+        shift
+        PH_PASSWORD=${1}
       ;;
       --k8s-infra)
         K8S_INFRA_ONLY=true
