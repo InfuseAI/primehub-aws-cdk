@@ -15,6 +15,7 @@ import { CertManager } from './cert-manager';
 import { PrimeHub } from './primehub';
 import { NvidiaDevicePlugin } from './nvidia-device-plugin';
 import { AwsEfsCsiDriver } from './aws-efs-csi-driver';
+import { BlockDeviceVolume } from '@aws-cdk/aws-autoscaling';
 
 export interface EksStackProps extends cdk.StackProps {
   name:  string;
@@ -74,6 +75,7 @@ export class EKSCluster extends cdk.Stack {
       desiredSize: 1,
       minSize: 1,
       maxSize: 3,
+      diskSize: 60,
       instanceTypes: [new InstanceType(`${props.cpuInstance}.xlarge`)],
       subnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       tags: {
@@ -90,6 +92,7 @@ export class EKSCluster extends cdk.Stack {
       minCapacity: 0,
       maxCapacity: 2,
       instanceType: new InstanceType(`${props.cpuInstance}.xlarge`),
+      blockDevices: [{deviceName: '/dev/xvda', volume: BlockDeviceVolume.ebs(80)}],
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       bootstrapOptions: {
         kubeletExtraArgs: "--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user --register-with-taints=hub.jupyter.org/dedicated=user:NoSchedule",
@@ -112,6 +115,7 @@ export class EKSCluster extends cdk.Stack {
       minCapacity: 0,
       maxCapacity: 2,
       instanceType: new InstanceType(`${props.gpuInstance}.xlarge`),
+      blockDevices: [{deviceName: '/dev/xvda', volume: BlockDeviceVolume.ebs(80)}],
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       bootstrapOptions: {
         kubeletExtraArgs: "--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user,nvidia.com/gpu=true --register-with-taints=nvidia.com/gpu=true:NoSchedule",

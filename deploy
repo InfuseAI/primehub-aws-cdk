@@ -65,6 +65,11 @@ cdk::context() {
   export NAME=${NAME:-'cdk'}
   export AWS_ACCOUNT=$(aws sts get-caller-identity | grep "Account" | sed 's/.*Account": "\(.*\)",/\1/' | sed 's/ //g')
 
+  if [ -f "./cdk.context.json" ]; then
+    warn "[Detect] The CDK context already exist. Backup it by cdk.context.bak"
+    mv cdk.context.json cdk.context.bak
+  fi
+
   if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"' > /dev/null ); then
     info "[Create] CDK context"
     AWS_BASED_DOMAIN=${AWS_BASED_DOMAIN:-''}
