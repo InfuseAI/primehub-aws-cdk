@@ -1,5 +1,11 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: PrimeHub Starter
+Description: |
+  The PrimeHub Starter Stack.
+  A new stack `eks-<Stack-name>-cdk-stack` will be created later in your AWS.
+  The access URL and default account/password will be show in the output of `eks-<Stack-name>-cdk-stack`.
+  Once the deployment is completed, this stack will be deleted automatically.
+  For more information, please visit: https://github.com/InfuseAI/primehub-aws-cdk
+
 Resources:
   PrimeHubCDKBootstrapEC2:
     Type: AWS::EC2::Instance
