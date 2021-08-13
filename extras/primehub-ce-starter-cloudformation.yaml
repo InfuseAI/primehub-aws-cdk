@@ -27,6 +27,8 @@ Resources:
               export AWS_STACK_NAME="${AWS::StackName}"
               export AWS_REGION="${AWS::Region}"
               export GIT_TAG='cfTemplate'
+              export CPU_INSTANCE="${CPUInstanceType}"
+              export GPU_INSTANCE="${GPUInstanceType}"
 
               ./run-cdk.sh
               /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource PrimeHubCDKBootstrapEC2
@@ -137,4 +139,23 @@ Parameters:
     AllowedValues:
       - ce
     Description: PrimeHub Community Edition Mode
-
+  CPUInstanceType:
+    Type: String
+    Default: t3.xlarge
+    AllowedValues:
+      - t3.xlarge
+      - t3.2xlarge
+      - t3a.xlarge
+      - t3a.2xlarge
+      - m5.xlarge
+      - m5.2xlarge
+      - c5.xlarge
+      - c5.2xlarge
+    Description: The Instance Type of auto scaling CPU node group
+  GPUInstanceType:
+    Type: String
+    Default: g4dn.xlarge
+    AllowedValues:
+      - g4dn.xlarge
+      - g4dn.2xlarge
+    Description: The Instance Type of auto scaling GPU node group

@@ -30,19 +30,21 @@ yarn install
 echo "Prepare CDK"
 AWS_REGION='us-east-1'
 AWS_ZONE='a'
-CPU_INSTANCE_TYPE='t3'
-GPU_INSTANCE_TYPE='g4dn'
+SYS_INSTANCE='t3.xlarge'
+CPU_INSTANCE="${CPU_INSTANCE:-'t3.xlage'}"
+GPU_INSTANCE="${GPU_INSTANCE:-'g4dn.xlarge'}"
 PASSWORD="$(openssl rand -hex 16)"
 echo "Name: ${AWS_STACK_NAME}"
 echo "Mode: ${PRIMEHUB_MODE}"
 echo "Region: ${AWS_REGION}"
 echo "Zone: ${AWS_ZONE}"
-echo "CPU Instance Type: ${CPU_INSTANCE_TYPE}"
-echo "GPU Instance Type: ${GPU_INSTANCE_TYPE}"
+echo "System Instance Type: ${SYS_INSTANCE_TYPE}"
+echo "CPU Instance Type: ${CPU_INSTANCE}"
+echo "GPU Instance Type: ${GPU_INSTANCE}"
 
 echo "Deploy CDK ${AWS_STACK_NAME}"
 export AWS_REGION
-./deploy ${AWS_STACK_NAME} --region ${AWS_REGION} --zone ${AWS_ZONE} --cpuInstanceType ${CPU_INSTANCE_TYPE} --gpuInstanceType ${GPU_INSTANCE_TYPE} --mode ${PRIMEHUB_MODE} --keycloak-password ${PASSWORD} --primehub-password ${PASSWORD} || exit 1
+./deploy ${AWS_STACK_NAME} --region ${AWS_REGION} --zone ${AWS_ZONE} --systemInstanceType ${SYS_INSTANCE} --cpuInstanceType ${CPU_INSTANCE} --gpuInstanceType ${GPU_INSTANCE} --mode ${PRIMEHUB_MODE} --keycloak-password ${PASSWORD} --primehub-password ${PASSWORD} || exit 1
 
 echo "Completed"
 exit 0

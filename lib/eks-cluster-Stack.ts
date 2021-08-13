@@ -27,6 +27,7 @@ export interface EksStackProps extends cdk.StackProps {
   availabilityZone: string;
   cpuInstance: string;
   gpuInstance: string;
+  systemInstance: string;
   masterRole?:  string;
   k8sInfraOnly?: string;
 }
@@ -76,12 +77,13 @@ export class EKSCluster extends cdk.Stack {
       minSize: 1,
       maxSize: 3,
       diskSize: 60,
-      instanceTypes: [new InstanceType(`${props.cpuInstance}.xlarge`)],
+      instanceTypes: [new InstanceType(props.systemInstance)],
       subnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       tags: {
         Name: `${clusterName}-default-node-group`,
         cluster: clusterName,
         owner: props.username,
+        InstanceType: props.systemInstance,
         clusterType: "dev-eks"
       },
     });
@@ -91,7 +93,7 @@ export class EKSCluster extends cdk.Stack {
       desiredCapacity: 0,
       minCapacity: 0,
       maxCapacity: 2,
-      instanceType: new InstanceType(`${props.cpuInstance}.xlarge`),
+      instanceType: new InstanceType(props.cpuInstance),
       blockDevices: [{deviceName: '/dev/xvda', volume: BlockDeviceVolume.ebs(80)}],
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       bootstrapOptions: {
@@ -101,6 +103,7 @@ export class EKSCluster extends cdk.Stack {
     cdk.Tags.of(cpuASG).add('Name', `${clusterName}-scaled-cpu-pool`);
     cdk.Tags.of(cpuASG).add('cluster', clusterName);
     cdk.Tags.of(cpuASG).add('owner', props.username);
+    cdk.Tags.of(cpuASG).add('instanceType', props.cpuInstance);
     cdk.Tags.of(cpuASG).add('clusterType', 'dev-eks');
     cdk.Tags.of(cpuASG).add(`k8s.io/cluster-autoscaler/${clusterName}`, 'owned');
     cdk.Tags.of(cpuASG).add('k8s.io/cluster-autoscaler/enabled', 'TRUE');
@@ -114,7 +117,7 @@ export class EKSCluster extends cdk.Stack {
       desiredCapacity: 0,
       minCapacity: 0,
       maxCapacity: 2,
-      instanceType: new InstanceType(`${props.gpuInstance}.xlarge`),
+      instanceType: new InstanceType(props.gpuInstance),
       blockDevices: [{deviceName: '/dev/xvda', volume: BlockDeviceVolume.ebs(80)}],
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       bootstrapOptions: {
@@ -125,6 +128,7 @@ export class EKSCluster extends cdk.Stack {
     cdk.Tags.of(gpuASG).add('Name', `${clusterName}-scaled-gpu-pool`);
     cdk.Tags.of(gpuASG).add('cluster', clusterName);
     cdk.Tags.of(gpuASG).add('owner', props.username);
+    cdk.Tags.of(gpuASG).add('instanceType', props.gpuInstance);
     cdk.Tags.of(gpuASG).add('clusterType', 'dev-eks');
     cdk.Tags.of(gpuASG).add(`k8s.io/cluster-autoscaler/${clusterName}`, 'owned');
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/enabled', 'TRUE');
