@@ -273,6 +273,8 @@ cdk.context.json
 .cdk.staging/
 cdk.out/
 *.tabl.json
+cdk.context.bak
+cdk.cloudformation.out
 
 # Yarn error log
 yarn-error.log
@@ -286,3 +288,6 @@ yarn-error.log
 
 /.versionrc.json
 artifact/
+
+# AWS Launch Stack URL Release
+extras/*.bak
