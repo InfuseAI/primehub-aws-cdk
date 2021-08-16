@@ -15,8 +15,9 @@ const basedDomain = app.node.tryGetContext('basedDomain') || process.env.AWS_BAS
 const primehubPassword = app.node.tryGetContext('primehubPassword') || process.env.PH_PASSWORD || crypto.randomBytes(32).toString('hex');
 const keycloakPassword = app.node.tryGetContext('keycloakPassword') || process.env.KC_PASSWORD || crypto.randomBytes(32).toString('hex');
 const zone = app.node.tryGetContext('zone') || 'a';
-const cpuInstance = app.node.tryGetContext('cpuInstance') || 't3a';
-const gpuInstance = app.node.tryGetContext('gpuInstance') || 'g4dn';
+const cpuInstance = app.node.tryGetContext('cpuInstance') || 't3a.xlarge';
+const gpuInstance = app.node.tryGetContext('gpuInstance') || 'g4dn.xlarge';
+const systemInstance = app.node.tryGetContext('systemInstance') || 't3a.xlarge';
 const k8sInfraOnly = app.node.tryGetContext('k8sInfraOnly') || 'false';
 
 const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
@@ -30,6 +31,7 @@ const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
   availabilityZone: `${env.region}${zone}`,
   cpuInstance: cpuInstance,
   gpuInstance: gpuInstance,
+  systemInstance: systemInstance,
   k8sInfraOnly: k8sInfraOnly
 });
 

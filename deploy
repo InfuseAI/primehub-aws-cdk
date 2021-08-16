@@ -8,8 +8,9 @@ K8S_INFRA_ONLY=false
 AWS_ACCOUNT=${AWS_ACCOUNT:-}
 AWS_REGION=${AWS_REGION:-$(aws configure get region || echo 'ap-northeast-1')}
 AWS_ZONE=${AWS_ZONE:-a}
-CPU_INSTANCE='t3a'
-GPU_INSTANCE='g4dn'
+CPU_INSTANCE='t3a.xlarge'
+GPU_INSTANCE='g4dn.xlarge'
+SYS_INSTANCE='t3a.xlarge'
 PH_PASSWORD=''
 KC_PASSWORD=''
 
@@ -37,8 +38,9 @@ Options:
   --dry-run                   : Dry run AWS CDK deploy
   --k8s-infra                 : Only setup AWS ESK without installing PrimeHub
   --domain   <base domain>    : Provide the base domain managed by AWS Route 53
-  --cpuInstanceType           : Set the EKS default CPU instance type ( Default: ${CPU_INSTANCE} )
-  --gpuInstanceType           : Set the EKS default GPU instance type ( Default: ${GPU_INSTANCE} )
+  --cpuInstanceType           : Set the EKS default CPU node group instance type ( Default: ${CPU_INSTANCE} )
+  --gpuInstanceType           : Set the EKS default GPU node group instance type ( Default: ${GPU_INSTANCE} )
+  --systemInstanceType        : Set the EKS default system node group instance type ( Default: ${SYS_INSTANCE} )
   --keycloak-password         : Set the password of Keycloak admin account
   --primehub-password         : Set the password of PrimeHub default account
   -h, --help                  : Show this message
@@ -86,6 +88,7 @@ cdk::context() {
       -c zone=$AWS_ZONE \
       -c cpuInstance=$CPU_INSTANCE \
       -c gpuInstance=$GPU_INSTANCE \
+      -c systemInstance=$SYS_INSTANCE \
       -c basedDomain=$AWS_BASED_DOMAIN \
       -c primehubMode=$PRIMEHUB_MODE \
       -c primehubPassword=$PH_PASSWORD \
@@ -143,6 +146,10 @@ args::parse() {
       --gpuInstanceType)
         shift
         GPU_INSTANCE=${1}
+      ;;
+      --systemInstanceType)
+        shift
+        SYS_INSTANCE=${1}
       ;;
       --dry-run)
         DRY_MODE=true
