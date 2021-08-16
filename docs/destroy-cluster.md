@@ -1,6 +1,6 @@
-# How to destroy the PrimeHub Cluster created by `primehub-aws-cdk`
+# How to destroy PrimeHub Cluster created by Launch Stack URL
 
-Once you want to destroy the Cluster created by PrimeHub-AWS-CDK, please follow the following steps to destroy.
+Once you want to destroy the Cluster created by PrimeHub Launch Stack URL, please follow the following steps to destroy.
 
 ## By AWS Management Console
 
@@ -41,10 +41,8 @@ Once you want to destroy the Cluster created by PrimeHub-AWS-CDK, please follow 
    $ aws configure
    ```
 
-3. Destory the CloudFormation Stack of primehub eks cluster
+3. Destroy the CloudFormation Stack of PrimeHub EKS cluster
 
    ```bash
    $ aws cloudformation --region us-east-1 --stack-name eks-<cluster name>-cdk-stack
    ```
-
-   
