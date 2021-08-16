@@ -6,10 +6,10 @@ The EKS cluster will include a Managed Node Group for PrimeHub system and 2 Auto
 ![image](Dev-EKS.png)
 ## Prerequisites
 
-* Setup a public domain served by route 53
-* AWS CLI with correct credentials configuration (Only support AWS region `ap-northeast-1` now.)
+* [Optional] Setup a public domain served by route 53
+* AWS CLI with correct credentials configuration
 * Node.js version >= 10.13.0 (We recommend a version in active long-term support, which, at this writing, is the latest 14.x release.)
-* CDK version >= 1.109
+* CDK version >= 1.115
 * yarn
 * ts-node
 
@@ -17,6 +17,8 @@ The EKS cluster will include a Managed Node Group for PrimeHub system and 2 Auto
 
 * VPC without NAT gatway
 * EKS cluster with Managed-nodegroup x1 and Self-managed nodes x 2
+* EFS with dynamic provisioner configured on EKS
+* S3 buckets, 1 for PrimeHub configuration, 1 for object store
 * Cluster-autoscaler on EKS
 * Ingress-nginx-controller on EKS
 * Cert-manager on EKS
@@ -37,3 +39,7 @@ Way to destroy the existing EKS stack
 ```bash
 cdk destroy
 ```
+
+Or please reference the following document to destroy the cluster.
+
+* [How to destroy PrimeHub Cluster created by Launch Stack URL](docs/destroy-cluster.md)
