@@ -30,6 +30,7 @@ export interface EksStackProps extends cdk.StackProps {
   systemInstance: string;
   masterRole?:  string;
   k8sInfraOnly?: string;
+  primehubVersion?: string;
 }
 
 export class EKSCluster extends cdk.Stack {
@@ -329,6 +330,7 @@ export class EKSCluster extends cdk.Stack {
       clusterName: clusterName,
       primehubMode: 'ee',
       primehubDomain: primehubDomain,
+      primehubVersion: props.primehubVersion,
       primehubPassword: props.primehubPassword,
       keycloakPassword: props.keycloakPassword,
       account: account,

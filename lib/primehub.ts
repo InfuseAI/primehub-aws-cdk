@@ -11,6 +11,7 @@ export interface PrimeHubProps {
     clusterName: string,
     primehubMode: string,
     primehubDomain: string,
+    primehubVersion?: string,
     primehubPassword: string,
     keycloakPassword: string,
     account: string,
@@ -18,7 +19,7 @@ export interface PrimeHubProps {
     primehubConfigBucket: string,
     sharedVolumeStorageClass?: string,
     primehubStoreBucket?: string,
-    dryRunMode?: boolean
+    dryRunMode?: boolean,
 }
 
 interface HelmValues {
@@ -145,6 +146,7 @@ export class PrimeHub extends cdk.Construct {
               namespace: 'hub',
               release: 'primehub',
               values: helmValues,
+              version: props.primehubVersion,
               timeout: cdk.Duration.minutes(15),
               wait: false,
           });

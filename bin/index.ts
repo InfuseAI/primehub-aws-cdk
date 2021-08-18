@@ -12,6 +12,7 @@ const username = app.node.tryGetContext('username') || process.env.USERNAME || '
 const name = app.node.tryGetContext('name') || process.env.NAME || 'cdk';
 const primehubMode = app.node.tryGetContext('primehubMode') || process.env.PRIMEHUB_MODE || 'ee';
 const basedDomain = app.node.tryGetContext('basedDomain') || process.env.AWS_BASED_DOMAIN || '';
+const primehubVersion = app.node.tryGetContext('primehubVersion');
 const primehubPassword = app.node.tryGetContext('primehubPassword') || process.env.PH_PASSWORD || crypto.randomBytes(32).toString('hex');
 const keycloakPassword = app.node.tryGetContext('keycloakPassword') || process.env.KC_PASSWORD || crypto.randomBytes(32).toString('hex');
 const zone = app.node.tryGetContext('zone') || 'a';
@@ -32,7 +33,8 @@ const eksClusterStack = new EKSCluster(app, `eks-${name}-cdk-stack`, {
   cpuInstance: cpuInstance,
   gpuInstance: gpuInstance,
   systemInstance: systemInstance,
-  k8sInfraOnly: k8sInfraOnly
+  k8sInfraOnly: k8sInfraOnly,
+  primehubVersion: primehubVersion,
 });
 
 eksClusterStack.templateOptions.description = `Setup AWS EKS environment with PrimeHub by AWS CDK.
