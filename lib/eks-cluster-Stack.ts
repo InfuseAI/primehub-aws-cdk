@@ -332,7 +332,7 @@ export class EKSCluster extends cdk.Stack {
       eksCluster: eksCluster,
       clusterName: clusterName,
       ecrRepoName: ecrRepoName,
-      primehubMode: 'ee',
+      primehubMode: props.primehubMode,
       primehubDomain: primehubDomain,
       primehubVersion: props.primehubVersion,
       primehubPassword: props.primehubPassword,
