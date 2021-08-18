@@ -359,6 +359,9 @@ export class EKSCluster extends cdk.Stack {
     new cdk.CfnOutput(this, 'PrimeHub Password', {value: props.primehubPassword});
     new cdk.CfnOutput(this, 'Keycloak Account', {value: 'keycloak'});
     new cdk.CfnOutput(this, 'Keycloak Password', {value: props.keycloakPassword});
+    if ( props.primehubVersion ) {
+      new cdk.CfnOutput(this, 'PrimeHub Version', {value: props.primehubVersion});
+    }
 
     cdk.Tags.of(eksCluster).add('owner', props.username);
     cdk.Tags.of(eksCluster).add('clusterName', clusterName);

@@ -34,6 +34,7 @@ SYS_INSTANCE='t3.xlarge'
 CPU_INSTANCE="${CPU_INSTANCE:-'t3.xlage'}"
 GPU_INSTANCE="${GPU_INSTANCE:-'g4dn.xlarge'}"
 PASSWORD="$(openssl rand -hex 16)"
+PRIMEHUB_VERSION='3.7.0-aws.2'
 echo "Name: ${AWS_STACK_NAME}"
 echo "Mode: ${PRIMEHUB_MODE}"
 echo "Region: ${AWS_REGION}"
@@ -44,7 +45,16 @@ echo "GPU Instance Type: ${GPU_INSTANCE}"
 
 echo "Deploy CDK ${AWS_STACK_NAME}"
 export AWS_REGION
-./deploy ${AWS_STACK_NAME} --region ${AWS_REGION} --zone ${AWS_ZONE} --systemInstanceType ${SYS_INSTANCE} --cpuInstanceType ${CPU_INSTANCE} --gpuInstanceType ${GPU_INSTANCE} --mode ${PRIMEHUB_MODE} --keycloak-password ${PASSWORD} --primehub-password ${PASSWORD} || exit 1
+./deploy ${AWS_STACK_NAME} \
+  --region ${AWS_REGION} \
+  --zone ${AWS_ZONE} \
+  --primehub-version ${PRIMEHUB_VERSION} \
+  --system-instance-type ${SYS_INSTANCE} \
+  --cpu-instance-type ${CPU_INSTANCE} \
+  --gpu-instance-type ${GPU_INSTANCE} \
+  --mode ${PRIMEHUB_MODE} \
+  --keycloak-password ${PASSWORD} \
+  --primehub-password ${PASSWORD} || exit 1
 
 echo "Completed"
 exit 0
