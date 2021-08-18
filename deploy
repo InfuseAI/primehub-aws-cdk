@@ -4,6 +4,7 @@ set -eo pipefail
 NAME=
 DRY_MODE=false
 PRIMEHUB_MODE=ee
+PRIMEHUB_VERSION=''
 K8S_INFRA_ONLY=false
 AWS_ACCOUNT=${AWS_ACCOUNT:-}
 AWS_REGION=${AWS_REGION:-$(aws configure get region || echo 'ap-northeast-1')}
@@ -38,6 +39,7 @@ Options:
   --dry-run                   : Dry run AWS CDK deploy
   --k8s-infra                 : Only setup AWS ESK without installing PrimeHub
   --domain   <base domain>    : Provide the base domain managed by AWS Route 53
+  --primehubVersion           : Set the specific version number of PrimeHub
   --cpuInstanceType           : Set the EKS default CPU node group instance type ( Default: ${CPU_INSTANCE} )
   --gpuInstanceType           : Set the EKS default GPU node group instance type ( Default: ${GPU_INSTANCE} )
   --systemInstanceType        : Set the EKS default system node group instance type ( Default: ${SYS_INSTANCE} )
@@ -75,6 +77,7 @@ cdk::context() {
   if [ ! -f "./cdk.context.json" ] || ! (cat ./cdk.context.json | grep '"clusterType": "dev-eks"' > /dev/null ); then
     info "[Create] CDK context"
     AWS_BASED_DOMAIN=${AWS_BASED_DOMAIN:-''}
+    PRIMEHUB_VERSION=${PRIMEHUB_VERSION:-''}
     PH_PASSWORD=${PH_PASSWORD:-"$(openssl rand -hex 16)"}
     KC_PASSWORD=${KC_PASSWORD:-"$(openssl rand -hex 16)"}
     ADMIN_UI_GRAPHQL_SECRET_KEY=$(openssl rand -hex 32)
@@ -86,6 +89,7 @@ cdk::context() {
       -c name=$NAME \
       -c region=$AWS_REGION \
       -c zone=$AWS_ZONE \
+      -c primehubVersion=$PRIMEHUB_VERSION \
       -c cpuInstance=$CPU_INSTANCE \
       -c gpuInstance=$GPU_INSTANCE \
       -c systemInstance=$SYS_INSTANCE \
@@ -138,6 +142,10 @@ args::parse() {
       --zone)
         shift
         AWS_ZONE=${1}
+      ;;
+      --primehubVersion)
+        shift
+        PRIMEHUB_VERSION=${1}
       ;;
       --cpuInstanceType)
         shift
