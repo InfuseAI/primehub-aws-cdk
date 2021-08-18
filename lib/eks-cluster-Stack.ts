@@ -5,6 +5,7 @@ import efs = require('@aws-cdk/aws-efs');
 import eks = require('@aws-cdk/aws-eks');
 import cdk = require('@aws-cdk/core');
 import route53 = require('@aws-cdk/aws-route53');
+import ecr = require('@aws-cdk/aws-ecr');
 import crypto = require('crypto');
 
 
@@ -42,6 +43,7 @@ export class EKSCluster extends cdk.Stack {
     const account: string  = env.account || '';
     const region: string = env.region || '';
     const clusterName = `eks-${props.name}`;
+    const randomHash = crypto.randomBytes(4).toString('hex');
 
     const vpc = new ec2.Vpc(this, 'vpc', {
       enableDnsHostnames: true,
@@ -199,6 +201,8 @@ export class EKSCluster extends cdk.Stack {
       },
       wait: false,
     });
+    const ecrRepoName = `${clusterName}-repo-${randomHash}`;
+    new ecr.Repository(this, `ecr-${clusterName}`, {repositoryName: ecrRepoName});
 
     // AWS EFS
     const efsFileSystem = new efs.FileSystem(this, 'efs-file-system', {
@@ -256,7 +260,6 @@ export class EKSCluster extends cdk.Stack {
     })
 
     // AWS S3
-    const randomHash = crypto.randomBytes(4).toString('hex');
     const primehubStoreBucket = `${clusterName}-store-${randomHash}`;
     const primehubConfigBucket = `${clusterName}-${randomHash}`;
     // Create S3 bucket to store primehub.yaml
@@ -328,6 +331,7 @@ export class EKSCluster extends cdk.Stack {
     const primehub = new PrimeHub(this, 'primehub', {
       eksCluster: eksCluster,
       clusterName: clusterName,
+      ecrRepoName: ecrRepoName,
       primehubMode: 'ee',
       primehubDomain: primehubDomain,
       primehubVersion: props.primehubVersion,

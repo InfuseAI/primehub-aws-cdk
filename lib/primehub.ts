@@ -9,6 +9,7 @@ import { writeFileSync, mkdirSync}  from 'fs';
 export interface PrimeHubProps {
     eksCluster: eks.ICluster,
     clusterName: string,
+    ecrRepoName: string,
     primehubMode: string,
     primehubDomain: string,
     primehubVersion?: string,
@@ -42,7 +43,7 @@ export class PrimeHub extends cdk.Construct {
         const helmValues = {
             customImage: {
               registryEndpoint: `https://${props.account}.dkr.ecr.${props.region}.amazonaws.com`,
-              pushRepoPrefix: `${props.account}.dkr.ecr.${props.region}.amazonaws.com`,
+              pushRepo: `${props.account}.dkr.ecr.${props.region}.amazonaws.com/${props.ecrRepoName}`,
               pushSecretName: 'aws-registry'
             },
             primehub: {
