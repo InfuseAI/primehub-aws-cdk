@@ -147,7 +147,7 @@ export class PrimeHub extends cdk.Construct {
               namespace: 'hub',
               release: 'primehub',
               values: helmValues,
-              version: props.primehubVersion,
+              version: props.primehubVersion || '',
               timeout: cdk.Duration.minutes(15),
               wait: false,
           });
