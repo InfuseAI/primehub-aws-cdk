@@ -29,6 +29,8 @@ export interface EksStackProps extends cdk.StackProps {
   cpuInstance: string;
   gpuInstance: string;
   systemInstance: string;
+  cpuDesiredCapacity: number;
+  gpuDesiredCapacity: number;
   masterRole?:  string;
   k8sInfraOnly?: string;
   primehubVersion?: string;
@@ -93,7 +95,7 @@ export class EKSCluster extends cdk.Stack {
 
     const cpuASG = eksCluster.addAutoScalingGroupCapacity('OnDemandCpuASG', {
       autoScalingGroupName: `${clusterName}-scaled-cpu-pool`,
-      desiredCapacity: 0,
+      desiredCapacity: props.cpuDesiredCapacity,
       minCapacity: 0,
       maxCapacity: 2,
       instanceType: new InstanceType(props.cpuInstance),
@@ -117,7 +119,7 @@ export class EKSCluster extends cdk.Stack {
 
     const gpuASG = eksCluster.addAutoScalingGroupCapacity('OnDemandGpuASG', {
       autoScalingGroupName: `${clusterName}-scaled-gpu-pool`,
-      desiredCapacity: 0,
+      desiredCapacity: props.gpuDesiredCapacity,
       minCapacity: 0,
       maxCapacity: 2,
       instanceType: new InstanceType(props.gpuInstance),

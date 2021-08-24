@@ -11,6 +11,8 @@ AWS_REGION=${AWS_REGION:-$(aws configure get region || echo 'ap-northeast-1')}
 AWS_ZONE=${AWS_ZONE:-a}
 CPU_INSTANCE='t3a.xlarge'
 GPU_INSTANCE='g4dn.xlarge'
+CPU_DESIRED_SIZE=0
+GPU_DESIRED_SIZE=0
 SYS_INSTANCE='t3a.xlarge'
 PH_PASSWORD=''
 KC_PASSWORD=''
@@ -42,6 +44,8 @@ Options:
   --primehub-version      <version>           : Set the specific version number of PrimeHub
   --cpu-instance-type     <ec2 instance type> : Set the EKS default CPU node group instance type ( Default: ${CPU_INSTANCE} )
   --gpu-instance-type     <ec2 instance type> : Set the EKS default GPU node group instance type ( Default: ${GPU_INSTANCE} )
+  --cpu-desired-capacity  <number>            : Set the EKS default CPU node group desired capacity ( Default: 0 )
+  --gpu-desired-capactiy  <number>            : Set the EKS default GPU node group desired capacity ( Default: 0 )
   --system-instance-type  <ec2 instance type> : Set the EKS default system node group instance type ( Default: ${SYS_INSTANCE} )
   --keycloak-password     <password>          : Set the password of Keycloak admin account
   --primehub-password     <password>          : Set the password of PrimeHub default account
@@ -92,6 +96,8 @@ cdk::context() {
       -c primehubVersion=$PRIMEHUB_VERSION \
       -c cpuInstance=$CPU_INSTANCE \
       -c gpuInstance=$GPU_INSTANCE \
+      -c cpuDesiredCapacity=$CPU_DESIRED_SIZE \
+      -c gpuDesiredCapacity=$GPU_DESIRED_SIZE \
       -c systemInstance=$SYS_INSTANCE \
       -c basedDomain=$AWS_BASED_DOMAIN \
       -c primehubMode=$PRIMEHUB_MODE \
@@ -158,6 +164,14 @@ args::parse() {
       --system-instance-type)
         shift
         SYS_INSTANCE=${1}
+      ;;
+      --cpu-desired-capacity)
+        shift
+        CPU_DESIRED_SIZE=${1}
+      ;;
+      --gpu-desired-capacity)
+        shift
+        GPU_DESIRED_SIZE=${1}
       ;;
       --dry-run)
         DRY_MODE=true

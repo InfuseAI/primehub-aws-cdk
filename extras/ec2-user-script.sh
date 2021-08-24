@@ -52,6 +52,7 @@ export AWS_REGION
   --system-instance-type ${SYS_INSTANCE} \
   --cpu-instance-type ${CPU_INSTANCE} \
   --gpu-instance-type ${GPU_INSTANCE} \
+  --cpu-desired-capacity 1 \
   --mode ${PRIMEHUB_MODE} \
   --keycloak-password ${PASSWORD} \
   --primehub-password ${PASSWORD} || exit 1
