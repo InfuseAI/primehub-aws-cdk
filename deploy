@@ -13,6 +13,8 @@ CPU_INSTANCE='t3a.xlarge'
 GPU_INSTANCE='g4dn.xlarge'
 CPU_DESIRED_SIZE=0
 GPU_DESIRED_SIZE=0
+CPU_MAX_SIZE=2
+GPU_MAX_SIZE=2
 SYS_INSTANCE='t3a.xlarge'
 PH_PASSWORD=''
 KC_PASSWORD=''
@@ -35,18 +37,20 @@ usage() {
 Usage: $SELF [options] <ClusterName>
 
 Options:
-  --mode                  <mode>              : Set the PrimeHub mode ( Default: ${PRIMEHUB_MODE}, Support: ee, ce, deploy )
-  --region                <aws region>        : Set the AWS region ( Default: ${AWS_REGION} )
-  --zone                  <zone>              : Set the AWS availability zones ( Default: ${AWS_ZONE} )
+  --mode                  <mode>              : Set the PrimeHub mode           ( Default: ${PRIMEHUB_MODE}, Support: ee, ce, deploy )
+  --region                <aws region>        : Set the AWS region              ( Default: ${AWS_REGION} )
+  --zone                  <zone>              : Set the AWS availability zones  ( Default: ${AWS_ZONE} )
   --dry-run                                   : Dry run AWS CDK deploy
   --k8s-infra                                 : Only setup AWS ESK without installing PrimeHub
   --domain                <base domain>       : Provide the base domain managed by AWS Route 53
   --primehub-version      <version>           : Set the specific version number of PrimeHub
-  --cpu-instance-type     <ec2 instance type> : Set the EKS default CPU node group instance type ( Default: ${CPU_INSTANCE} )
-  --gpu-instance-type     <ec2 instance type> : Set the EKS default GPU node group instance type ( Default: ${GPU_INSTANCE} )
+  --system-instance-type  <ec2 instance type> : Set the EKS default system node group instance type ( Default: ${SYS_INSTANCE} )
+  --cpu-instance-type     <ec2 instance type> : Set the EKS default CPU node group instance type    ( Default: ${CPU_INSTANCE} )
+  --gpu-instance-type     <ec2 instance type> : Set the EKS default GPU node group instance type    ( Default: ${GPU_INSTANCE} )
   --cpu-desired-capacity  <number>            : Set the EKS default CPU node group desired capacity ( Default: 0 )
   --gpu-desired-capactiy  <number>            : Set the EKS default GPU node group desired capacity ( Default: 0 )
-  --system-instance-type  <ec2 instance type> : Set the EKS default system node group instance type ( Default: ${SYS_INSTANCE} )
+  --cpu-max-capacity      <number>            : Set the EKS default CPU node group max capacity     ( Default: 2 )
+  --gpu-max-capactiy      <number>            : Set the EKS default GPU node group max capacity     ( Default: 2 )
   --keycloak-password     <password>          : Set the password of Keycloak admin account
   --primehub-password     <password>          : Set the password of PrimeHub default account
   -h, --help                                  : Show this message
@@ -98,6 +102,8 @@ cdk::context() {
       -c gpuInstance=$GPU_INSTANCE \
       -c cpuDesiredCapacity=$CPU_DESIRED_SIZE \
       -c gpuDesiredCapacity=$GPU_DESIRED_SIZE \
+      -c cpuMaxCapacity=$CPU_MAX_SIZE \
+      -c gpuMaxCapacity=$GPU_MAX_SIZE \
       -c systemInstance=$SYS_INSTANCE \
       -c basedDomain=$AWS_BASED_DOMAIN \
       -c primehubMode=$PRIMEHUB_MODE \
@@ -172,6 +178,14 @@ args::parse() {
       --gpu-desired-capacity)
         shift
         GPU_DESIRED_SIZE=${1}
+      ;;
+      --cpu-max-capacity)
+        shift
+        CPU_MAX_SIZE=${1}
+      ;;
+      --gpu-max-capacity)
+        shift
+        GPU_MAX_SIZE=${1}
       ;;
       --dry-run)
         DRY_MODE=true

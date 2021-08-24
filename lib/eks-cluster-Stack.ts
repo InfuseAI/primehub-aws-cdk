@@ -31,6 +31,8 @@ export interface EksStackProps extends cdk.StackProps {
   systemInstance: string;
   cpuDesiredCapacity: number;
   gpuDesiredCapacity: number;
+  cpuMaxCapacity: number;
+  gpuMaxCapacity: number;
   masterRole?:  string;
   k8sInfraOnly?: string;
   primehubVersion?: string;
@@ -97,7 +99,7 @@ export class EKSCluster extends cdk.Stack {
       autoScalingGroupName: `${clusterName}-scaled-cpu-pool`,
       desiredCapacity: props.cpuDesiredCapacity,
       minCapacity: 0,
-      maxCapacity: 2,
+      maxCapacity: props.cpuMaxCapacity,
       instanceType: new InstanceType(props.cpuInstance),
       blockDevices: [{deviceName: '/dev/xvda', volume: BlockDeviceVolume.ebs(80)}],
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
@@ -121,7 +123,7 @@ export class EKSCluster extends cdk.Stack {
       autoScalingGroupName: `${clusterName}-scaled-gpu-pool`,
       desiredCapacity: props.gpuDesiredCapacity,
       minCapacity: 0,
-      maxCapacity: 2,
+      maxCapacity: props.gpuMaxCapacity,
       instanceType: new InstanceType(props.gpuInstance),
       blockDevices: [{deviceName: '/dev/xvda', volume: BlockDeviceVolume.ebs(80)}],
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},

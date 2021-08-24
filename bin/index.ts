@@ -22,10 +22,12 @@ const systemInstance = app.node.tryGetContext('systemInstance') || 't3a.xlarge';
 const k8sInfraOnly = app.node.tryGetContext('k8sInfraOnly') || 'false';
 const cpuDesiredCapacity = parseInt(app.node.tryGetContext('cpuDesiredCapacity') || '0', 10) ;
 const gpuDesiredCapacity = parseInt(app.node.tryGetContext('gpuDesiredCapacity') || '0', 10) ;
+const cpuMaxCapacity = parseInt(app.node.tryGetContext('cpuMaxCapacity') || '2', 10) ;
+const gpuMaxCapacity = parseInt(app.node.tryGetContext('gpuMaxCapacity') || '2', 10) ;
 
-const eksSackName = `eks-${name}-cdk-stack`;
 
-const eksClusterStack = new EKSCluster(app, eksSackName , {
+const eksStackName = `eks-${name}-cdk-stack`;
+const eksClusterStack = new EKSCluster(app, eksStackName , {
   env: env,
   name: name,
   username: username,
@@ -39,12 +41,14 @@ const eksClusterStack = new EKSCluster(app, eksSackName , {
   systemInstance: systemInstance,
   cpuDesiredCapacity: cpuDesiredCapacity,
   gpuDesiredCapacity: gpuDesiredCapacity,
+  cpuMaxCapacity: cpuMaxCapacity,
+  gpuMaxCapacity: gpuMaxCapacity,
   k8sInfraOnly: k8sInfraOnly,
   primehubVersion: primehubVersion,
 });
 
 eksClusterStack.templateOptions.description = `Setup AWS EKS environment with PrimeHub by AWS CDK.
-The PrimeHub access information will show in the 'Outputs' tab once the stack status of '${eksSackName}' becomes CREATE_COMPLETE.
+The PrimeHub access information will show in the 'Outputs' tab once the stack status of '${eksStackName}' becomes CREATE_COMPLETE.
 For more information, please visit: https://github.com/InfuseAI/primehub-aws-cdk`;
 
 cdk.Tags.of(eksClusterStack).add("owner", username);
