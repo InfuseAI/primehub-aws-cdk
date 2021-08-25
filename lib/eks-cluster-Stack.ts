@@ -7,6 +7,8 @@ import cdk = require('@aws-cdk/core');
 import route53 = require('@aws-cdk/aws-route53');
 import ecr = require('@aws-cdk/aws-ecr');
 import crypto = require('crypto');
+import cf = require('@aws-cdk/aws-cloudfront');
+import cfo = require('@aws-cdk/aws-cloudfront-origins');
 
 
 import { InstanceType } from '@aws-cdk/aws-ec2';
@@ -306,7 +308,9 @@ export class EKSCluster extends cdk.Stack {
     });
     new cdk.CfnOutput(this, 'AWS ELB Domain', {value: awsElbAddress.value});
 
+    let acmeEnabled;
     if (props.basedDomain != '') {
+      acmeEnabled = true;
       // Setup DNS record by AWS ELB
       const hostedZone =  route53.HostedZone.fromLookup(this, 'Domain', {
         domainName: props.basedDomain
@@ -328,7 +332,21 @@ export class EKSCluster extends cdk.Stack {
       });
       primehubDomain = `hub.${clusterName}.${props.basedDomain}`;
     } else {
-      primehubDomain = awsElbAddress.value;
+      // Create cloudfront distribution
+      const cfd = new cf.Distribution(this, 'myDist', {
+        defaultBehavior: {
+          origin: new cfo.HttpOrigin(awsElbAddress.value, {
+            protocolPolicy: cf.OriginProtocolPolicy.HTTP_ONLY
+          }),
+          allowedMethods: cf.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cf.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cf.OriginRequestPolicy.ALL_VIEWER,
+          viewerProtocolPolicy: cf.ViewerProtocolPolicy.ALLOW_ALL
+        },
+      });
+      acmeEnabled = false;
+      primehubDomain = cfd.domainName;
+      new cdk.CfnOutput(this, 'AWS CloudFront Domain', {value: cfd.domainName});
     }
 
     const dryRunMode = ( props.k8sInfraOnly == 'true' );
@@ -338,6 +356,7 @@ export class EKSCluster extends cdk.Stack {
       ecrRepoName: ecrRepoName,
       primehubMode: props.primehubMode,
       primehubDomain: primehubDomain,
+      acmeEnabled: acmeEnabled,
       primehubVersion: props.primehubVersion,
       primehubPassword: props.primehubPassword,
       keycloakPassword: props.keycloakPassword,
