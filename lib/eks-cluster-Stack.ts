@@ -336,12 +336,13 @@ export class EKSCluster extends cdk.Stack {
       const cfd = new cf.Distribution(this, 'myDist', {
         defaultBehavior: {
           origin: new cfo.HttpOrigin(awsElbAddress.value, {
-            protocolPolicy: cf.OriginProtocolPolicy.HTTP_ONLY
+            protocolPolicy: cf.OriginProtocolPolicy.HTTP_ONLY,
+            customHeaders: { 'X-Forwarded-Proto': 'https' }
           }),
           allowedMethods: cf.AllowedMethods.ALLOW_ALL,
           cachePolicy: cf.CachePolicy.CACHING_DISABLED,
           originRequestPolicy: cf.OriginRequestPolicy.ALL_VIEWER,
-          viewerProtocolPolicy: cf.ViewerProtocolPolicy.ALLOW_ALL
+          viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
         },
       });
       acmeEnabled = false;
