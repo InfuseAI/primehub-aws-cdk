@@ -30,17 +30,21 @@ EOF
 }
 
 function replace_domain() {
-  local elb_domain=$1
+  local primehub_domain=$1
+  local elb_domain=${2:-}
 
   local extension=''
   if [[ "$(uname)" == "Darwin" ]]; then
     extension=".bak"
   fi
 
-  info "[Patch] ELB Domain -> ${elb_domain}"
+  info "[Patch] ELB Domain -> ${primehub_domain}"
   k8s_context=$(kubectl config current-context)
-  sed -i ${extension} "s/\${Token.*}/${elb_domain}/g" ~/.primehub/config/${k8s_context}/.env
-  sed -i ${extension} "s/\${Token.*}/${elb_domain}/g" ~/.primehub/config/${k8s_context}/helm_override/primehub.yaml
+  if [ "${elb_domain}" != '' ]; then
+    sed -i ${extension} "s/customHostname: \${Token.*}/customHostname: ${elb_domain}/g" ~/.primehub/config/${k8s_context}/helm_override/primehub.yaml
+  fi
+  sed -i ${extension} "s/\${Token.*}/${primehub_domain}/g" ~/.primehub/config/${k8s_context}/.env
+  sed -i ${extension} "s/\${Token.*}/${primehub_domain}/g" ~/.primehub/config/${k8s_context}/helm_override/primehub.yaml
 }
 
 function connect() {
@@ -88,7 +92,7 @@ function connect() {
   if [ "${PRIMEHUB_URL}" == "https://${AWS_ELB_DOMAIN}" ]; then
     replace_domain ${AWS_ELB_DOMAIN}
   elif [ "${PRIMEHUB_URL}" == "https://${AWS_CLOUDFRONT_DOMAIN}" ]; then
-    replace_domain ${AWS_CLOUDFRONT_DOMAIN}
+    replace_domain ${AWS_CLOUDFRONT_DOMAIN} ${AWS_ELB_DOMAIN}
   fi
 }
 

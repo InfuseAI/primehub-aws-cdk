@@ -309,6 +309,7 @@ export class EKSCluster extends cdk.Stack {
     new cdk.CfnOutput(this, 'AWS ELB Domain', {value: awsElbAddress.value});
 
     let acmeEnabled;
+    let sshCustomHostname = '';
     if (props.basedDomain != '') {
       acmeEnabled = true;
       // Setup DNS record by AWS ELB
@@ -348,6 +349,7 @@ export class EKSCluster extends cdk.Stack {
       });
       acmeEnabled = false;
       primehubDomain = cfd.domainName;
+      sshCustomHostname = awsElbAddress.value;
       new cdk.CfnOutput(this, 'AWS CloudFront Domain', {value: cfd.domainName});
     }
 
@@ -359,6 +361,7 @@ export class EKSCluster extends cdk.Stack {
       primehubMode: props.primehubMode,
       primehubDomain: primehubDomain,
       acmeEnabled: acmeEnabled,
+      sshCustomHostname: sshCustomHostname,
       primehubVersion: props.primehubVersion,
       primehubPassword: props.primehubPassword,
       keycloakPassword: props.keycloakPassword,

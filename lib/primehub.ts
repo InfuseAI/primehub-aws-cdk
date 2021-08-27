@@ -13,6 +13,7 @@ export interface PrimeHubProps {
     primehubMode: string,
     primehubDomain: string,
     acmeEnabled: boolean,
+    sshCustomHostname?: string,
     primehubVersion?: string,
     primehubPassword: string,
     keycloakPassword: string,
@@ -136,6 +137,10 @@ export class PrimeHub extends cdk.Construct {
                         }
                     }
                 }
+            },
+            sshBastionServer: {
+              enabled: true,
+              customHostname: (props.sshCustomHostname) ? props.sshCustomHostname : '',
             },
         } as HelmValues
 
