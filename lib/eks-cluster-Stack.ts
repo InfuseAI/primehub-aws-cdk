@@ -334,6 +334,7 @@ export class EKSCluster extends cdk.Stack {
     } else {
       // Create cloudfront distribution
       const cfd = new cf.Distribution(this, 'myDist', {
+        comment: clusterName,
         defaultBehavior: {
           origin: new cfo.HttpOrigin(awsElbAddress.value, {
             protocolPolicy: cf.OriginProtocolPolicy.HTTP_ONLY,
