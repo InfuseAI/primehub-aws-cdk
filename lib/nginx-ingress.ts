@@ -43,6 +43,10 @@ export class IngressNginxController extends cdk.Construct {
                 admissionWebhooks: {
                     enabled: false,
                 },
+                config: {
+                    'ssl-redirect': 'false',
+                    'use-forwarded-headers': 'true',
+                },
                 containerPort: {
                     http: 80,
                     https: 443,

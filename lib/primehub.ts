@@ -12,6 +12,7 @@ export interface PrimeHubProps {
     ecrRepoName: string,
     primehubMode: string,
     primehubDomain: string,
+    acmeEnabled: boolean,
     primehubVersion?: string,
     primehubPassword: string,
     keycloakPassword: string,
@@ -67,7 +68,7 @@ export class PrimeHub extends cdk.Construct {
                 annotations: {
                     'ingress.kubernetes.io/affinity': 'cookie',
                     'kubernetes.io/ingress.class': 'nginx',
-                    'kubernetes.io/tls-acme': 'true',
+                    'kubernetes.io/tls-acme': props.acmeEnabled ? 'true' : 'false',
                 },
                 hosts: [ props.primehubDomain ],
                 tls: [{hosts: [props.primehubDomain], secretName: 'hub-tls'}],
