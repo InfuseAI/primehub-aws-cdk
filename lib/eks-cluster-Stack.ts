@@ -106,7 +106,7 @@ export class EKSCluster extends cdk.Stack {
       blockDevices: [{deviceName: '/dev/xvda', volume: BlockDeviceVolume.ebs(80)}],
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       bootstrapOptions: {
-        kubeletExtraArgs: "--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user --register-with-taints=hub.jupyter.org/dedicated=user:NoSchedule",
+        kubeletExtraArgs: `--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user,instance-type=${props.cpuInstance} --register-with-taints=hub.jupyter.org/dedicated=user:NoSchedule`,
       },
     });
     cdk.Tags.of(cpuASG).add('Name', `${clusterName}-scaled-cpu-pool`);
@@ -117,6 +117,7 @@ export class EKSCluster extends cdk.Stack {
     cdk.Tags.of(cpuASG).add(`k8s.io/cluster-autoscaler/${clusterName}`, 'owned');
     cdk.Tags.of(cpuASG).add('k8s.io/cluster-autoscaler/enabled', 'TRUE');
     cdk.Tags.of(cpuASG).add('k8s.io/cluster-autoscaler/node-template/label/auto-scaler', 'enabled');
+    cdk.Tags.of(cpuASG).add('k8s.io/cluster-autoscaler/node-template/label/instance-type', props.cpuInstance);
     cdk.Tags.of(cpuASG).add('k8s.io/cluster-autoscaler/node-template/label/component', 'singleuser-server');
     cdk.Tags.of(cpuASG).add('k8s.io/cluster-autoscaler/node-template/label/hub.jupyter.org/node-purpose', 'user');
     cdk.Tags.of(cpuASG).add('k8s.io/cluster-autoscaler/node-template/taint/hub.jupyter.org/dedicated', 'user:NoSchedule');
@@ -130,7 +131,7 @@ export class EKSCluster extends cdk.Stack {
       blockDevices: [{deviceName: '/dev/xvda', volume: BlockDeviceVolume.ebs(80)}],
       vpcSubnets: {subnetType: ec2.SubnetType.PUBLIC, availabilityZones: [props.availabilityZone]},
       bootstrapOptions: {
-        kubeletExtraArgs: "--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user,nvidia.com/gpu=true --register-with-taints=nvidia.com/gpu=true:NoSchedule",
+        kubeletExtraArgs: `--node-labels=component=singleuser-server,hub.jupyter.org/node-purpose=user,instance-type=${props.gpuInstance},nvidia.com/gpu=true --register-with-taints=nvidia.com/gpu=true:NoSchedule`,
         dockerConfigJson: '{ "exec-opts": ["native.cgroupdriver=systemd"] }',
       },
     });
@@ -142,6 +143,7 @@ export class EKSCluster extends cdk.Stack {
     cdk.Tags.of(gpuASG).add(`k8s.io/cluster-autoscaler/${clusterName}`, 'owned');
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/enabled', 'TRUE');
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/node-template/label/auto-scaler', 'enabled');
+    cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/node-template/label/instance-type', props.gpuInstance);
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/node-template/label/component', 'singleuser-server');
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/node-template/label/hub.jupyter.org/node-purpose', 'user');
     cdk.Tags.of(gpuASG).add('k8s.io/cluster-autoscaler/node-template/taint/nvidia.com/gpu', 'true:NoSchedule');
@@ -370,7 +372,9 @@ export class EKSCluster extends cdk.Stack {
       sharedVolumeStorageClass: 'efs-sc',
       primehubStoreBucket: primehubStoreBucket,
       primehubConfigBucket: primehubConfigBucket,
-      dryRunMode: dryRunMode
+      dryRunMode: dryRunMode,
+      cpuInstance: props.cpuInstance,
+      gpuInstance: props.gpuInstance,
     });
 
     const primehubReadyHelmCharts = new cdk.ConcreteDependable();
