@@ -149,6 +149,9 @@ Parameters:
       - t3a.2xlarge
       - m5.xlarge
       - m5.2xlarge
+      - m5.4xlarge
+      - m5.8xlarge
+      - m5.12xlarge
       - c5.xlarge
       - c5.2xlarge
     Description: The Instance Type of auto scaling CPU node group
@@ -158,4 +161,5 @@ Parameters:
     AllowedValues:
       - g4dn.xlarge
       - g4dn.2xlarge
+      - g4dn.12xlarge
     Description: The Instance Type of auto scaling GPU node group
