@@ -23,6 +23,8 @@ export interface PrimeHubProps {
     sharedVolumeStorageClass?: string,
     primehubStoreBucket?: string,
     dryRunMode?: boolean,
+    cpuInstance: string,
+    gpuInstance: string,
 }
 
 interface HelmValues {
@@ -41,6 +43,7 @@ export class PrimeHub extends cdk.Construct {
         const hubProxySecretKey = scope.node.tryGetContext('HubProxySecretKey') || process.env.HUB_PROXY_SECRET_TOKEN || crypto.randomBytes(32).toString('hex');
 
         const enabledPrimeHubStore = (props.primehubStoreBucket) ? true : false;
+        const instanceTypes = [PrimeHub.generateInstanceTypeConfig(props.cpuInstance), PrimeHub.generateInstanceTypeConfig(props.gpuInstance)].flat();
 
         const helmValues = {
             customImage: {
@@ -78,7 +81,8 @@ export class PrimeHub extends cdk.Construct {
                 storageClass: 'gp2'
             },
             bootstrap: {
-                password: props.primehubPassword
+                password: props.primehubPassword,
+                instanceTypes: instanceTypes
             },
             graphql: {
                 sharedGraphqlSecret: graphqlSecretKey
@@ -193,5 +197,202 @@ KEYCLOAK_DEPLOY=true`;
           sources: [ s3deploy.Source.asset(`./artifact/${props.clusterName}`) ],
           destinationBucket: bucket,
         });
+    }
+
+    static calculateInstanceSize(instanceClass: string, instanceSize: string): number[] {
+      let cpu: number = 2;
+      let memory: number = 8;
+      let gpu: number = 0;
+
+      const instanceSizeMap: HelmValues = {
+        'xlarge': {
+          cpu: 4,
+          memory: 16,
+        },
+        '2xlarge': {
+          cpu: 8,
+          memory: 32,
+        },
+        '4xlarge': {
+          cpu: 16,
+          memory: 64,
+        },
+        '8xlarge': {
+          cpu: 32,
+          memory: 128,
+        },
+        '12xlarge': {
+          cpu: 48,
+          memory: 192,
+        },
+        '16xlarge': {
+          cpu: 64,
+          memory: 256,
+        },
+        '24xlarge': {
+          cpu: 96,
+          memory: 384,
+        },
+        'metal': {
+          cpu: 96,
+          memory: 384,
+        }
+      };
+
+      if (instanceSizeMap[instanceSize]) {
+        cpu = instanceSizeMap[instanceSize].cpu;
+        memory = instanceSizeMap[instanceSize].memory;
+      }
+
+      // AWS EC2 Compute Optimized Instance has less memory
+      // Ref: https://aws.amazon.com/ec2/instance-types/
+      if (instanceClass.startsWith('c')) {
+        memory = memory / 2;
+      }
+
+      // AWS EC2 Compute Optimized
+      if (instanceClass === 'g4dn') {
+        switch (instanceSize) {
+          case '12xlarge':
+            gpu = 4;
+            break;
+          case 'metal':
+            gpu = 8;
+          default:
+            gpu = 1;
+            break;
+        }
+      }
+      else if (instanceClass === 'p3' || instanceClass === 'p3dn') {
+        switch (instanceSize) {
+          case '2xlarge':
+            gpu = 1;
+            break;
+          case '8xlarge':
+            gpu = 4;
+            break;
+          case '16xlarge':
+            gpu = 8
+            break;
+          case '24xlarge':
+            gpu = 8
+            break;
+        }
+      }
+
+      return [cpu, memory, gpu];
+    }
+
+    static generateInstanceTypeConfig(instanceType: string): HelmValues[] {
+      const instanceTypesConfig: HelmValues[] = [];
+      const [instanceClass, instanceSize] = instanceType.split('.');
+      const [cpu, memory, gpu] = this.calculateInstanceSize(instanceClass, instanceSize);
+      const groupType = (gpu > 0) ? 'GPU' : 'CPU';
+      const gpuToleration = {
+        key: 'nvidia.com/gpu',
+        operator: 'Exists',
+        effect: 'NoSchedul',
+        value: 'true'
+      };
+
+      // Quarter Instance
+      if ( cpu/4 >= 1 ) {
+        const quarterGpu = (gpu/4 >= 1) ? gpu / 4 : gpu;
+        const quarterCpu = cpu/4;
+        const quarterMemory = memory/4;
+        const quarterInstance = {
+            metadata: {
+              name: `${instanceType}-quarter`
+            },
+            spec: {
+              'description': `CPU: ${quarterCpu} / Memory: ${quarterMemory}G / GPU: ${quarterGpu}`,
+              'displayName': `[${groupType}] ${instanceType} -> Quarter`,
+              'limits.cpu': quarterCpu,
+              'limits.memory': `${quarterMemory}G`,
+              'limits.nvidia.com/gpu':  quarterGpu,
+              'requests.cpu': quarterCpu*8/10,
+              'requests.memory': `${quarterMemory*8/10}G`,
+              'nodeSelector': {
+                'instance-type': instanceType,
+                'component': 'singleuser-server',
+              },
+              'tolerations': [{
+                key: "hub.jupyter.org/dedicated",
+                operator: "Equal",
+                value: "user",
+                effect: "NoSchedule",
+              }],
+            }
+          };
+          if (quarterGpu > 0) {
+            quarterInstance.spec.tolerations.push({...gpuToleration});
+          }
+          instanceTypesConfig.push(quarterInstance);
+      }
+
+      // Half Instance
+      const halfGpu = (gpu/2 >= 1) ? gpu / 2 : gpu;
+      const halfCpu = cpu/2;
+      const halfMemory = memory/2;
+      const halfInstance = {
+        metadata: {
+          name: `${instanceType}-half`
+        },
+        spec: {
+          'description': `CPU: ${halfCpu} / Memory: ${halfMemory}G / GPU: ${halfGpu}`,
+          'displayName': `[${groupType}] ${instanceType} -> Half`,
+          'limits.cpu': halfCpu,
+          'limits.memory': `${halfMemory}G`,
+          'limits.nvidia.com/gpu':  halfGpu,
+          'requests.cpu': halfCpu*8/10,
+          'requests.memory': `${halfMemory*8/10}G`,
+          'nodeSelector': {
+            'instance-type': instanceType,
+            'component': 'singleuser-server',
+          },
+          'tolerations': [{
+            key: "hub.jupyter.org/dedicated",
+            operator: "Equal",
+            value: "user",
+            effect: "NoSchedule",
+          }],
+        }
+      };
+      if (gpu > 0) {
+        halfInstance.spec.tolerations.push({...gpuToleration});
+      }
+      instanceTypesConfig.push(halfInstance);
+
+      // Full Instance
+      const fullInstance = {
+        metadata: {
+          name: `${instanceType}-full`
+        },
+        spec: {
+          'description': `CPU: ${cpu} / Memory: ${memory}G / GPU: ${gpu}`,
+          'displayName': `[${groupType}] ${instanceType} -> Full`,
+          'limits.cpu': cpu,
+          'limits.memory': `${memory}G`,
+          'limits.nvidia.com/gpu':  gpu,
+          'requests.cpu': cpu*8/10,
+          'requests.memory': `${memory*8/10}G`,
+          'nodeSelector': {
+            'instance-type': instanceType,
+            'component': 'singleuser-server',
+          },
+          'tolerations': [{
+              key: "hub.jupyter.org/dedicated",
+              operator: "Equal",
+              value: "user",
+              effect: "NoSchedule",
+          }],
+        }
+      };
+      if (gpu > 0) {
+        fullInstance.spec.tolerations.push({...gpuToleration});
+      }
+      instanceTypesConfig.push(fullInstance);
+
+      return instanceTypesConfig;
     }
 }
