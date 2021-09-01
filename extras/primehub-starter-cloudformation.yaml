@@ -154,6 +154,8 @@ Parameters:
       - m5.12xlarge
       - c5.xlarge
       - c5.2xlarge
+      - c5.4xlarge
+      - c5.12xlarge
     Description: The Instance Type of auto scaling CPU node group
   GPUInstanceType:
     Type: String
