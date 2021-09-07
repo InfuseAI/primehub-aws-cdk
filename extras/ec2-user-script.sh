@@ -34,7 +34,7 @@ SYS_INSTANCE='t3.xlarge'
 CPU_INSTANCE="${CPU_INSTANCE:-'t3.xlage'}"
 GPU_INSTANCE="${GPU_INSTANCE:-'g4dn.xlarge'}"
 PASSWORD="$(openssl rand -hex 16)"
-PRIMEHUB_VERSION='3.7.2-aws.1'
+PRIMEHUB_VERSION='3.7.2-aws.2'
 echo "Name: ${AWS_STACK_NAME}"
 echo "Mode: ${PRIMEHUB_MODE}"
 echo "Region: ${AWS_REGION}"
