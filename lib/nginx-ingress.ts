@@ -44,7 +44,6 @@ export class IngressNginxController extends cdk.Construct {
                     enabled: false,
                 },
                 config: {
-                    'ssl-redirect': 'false',
                     'use-forwarded-headers': 'true',
                 },
                 containerPort: {
