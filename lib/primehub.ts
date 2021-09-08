@@ -116,7 +116,31 @@ export class PrimeHub extends cdk.Construct {
                         pvc: {
                             storageClassName: 'gp2'
                         }
-                    }
+                    },
+                    extraEnv: [
+                      {
+                        name: 'KC_CLIENT_SECRET',
+                        valueFrom: {
+                          secretKeyRef: {
+                            name: 'primehub-client-jupyterhub',
+                            key: 'client_secret'
+                          }
+                        }
+                      },
+                      {
+                        name: 'GRAPHQL_SHARED_SECRET',
+                        valueFrom: {
+                          secretKeyRef: {
+                            name: 'primehub-graphql-shared-secret',
+                            key: 'sharedSecret'
+                          }
+                        }
+                      },
+                      {
+                        name: 'OAUTH_CALLBACK_URL',
+                        value: `https://${props.primehubDomain}/hub/oauth_callback`
+                      }
+                    ],
                 },
                 proxy: {
                     secretToken: hubProxySecretKey,
