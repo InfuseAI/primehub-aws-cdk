@@ -28,7 +28,7 @@ function notification::completed() {
 
   cf_output=$(aws cloudformation describe-stacks --stack-name eks-${name}-cdk-stack --region ${region} --query "Stacks[0].Outputs[*]" --output text)
   stackId=$(aws cloudformation describe-stacks --stack-name eks-${name}-cdk-stack --region ${region} --query Stacks[0].StackId | sed 's/"//g')
-  PRIMEHUB_URL=$(echo ${cf_output} | grep "^PrimeHubURL" | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+  PRIMEHUB_URL=$(echo "${cf_output}" | grep "^PrimeHubURL" | awk '{$1 = ""; print $0;}' | sed 's/ //g')
   if [[ "${id}" != "" ]]; then
     curl -s --location --request PATCH "${EMAIL_NOTIFICATION_API}/${id}" \
       --header 'Content-Type: application/json' \
