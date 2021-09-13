@@ -140,12 +140,6 @@ Parameters:
     AllowedPattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
     ConstraintDescription: Must be a valid email address.
     Description: Please provide an email for notifying the cluster installation status. This is for sending credential only, no marketing material, no spam
-  PrimeHubPassword:
-    Type: String
-    Description: Please setup the password of default PrimeHub user
-    MinLength: 8
-    MaxLength: 64
-    ConstraintDescription: "Minimum eight characters"
   PrimeHubInstallMode:
     Type: String
     Default: ee
