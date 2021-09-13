@@ -30,7 +30,6 @@ Resources:
               export CPU_INSTANCE="${CPUInstanceType}"
               export GPU_INSTANCE="${GPUInstanceType}"
               export EMAIL_NOTIFICATION="${EmailNotification}"
-              export PRIMEHUB_PASSWORD="${PrimeHubPassword}"
 
               ./run-cdk.sh > /var/log/primehub-starter.log
               /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource PrimeHubCDKBootstrapEC2
