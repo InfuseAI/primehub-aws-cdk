@@ -315,7 +315,7 @@ KEYCLOAK_DEPLOY=true`;
       const gpuToleration = {
         key: 'nvidia.com/gpu',
         operator: 'Exists',
-        effect: 'NoSchedul',
+        effect: 'NoSchedule',
         value: 'true'
       };
 
