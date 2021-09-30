@@ -71,6 +71,7 @@ PASSWORD="${PRIMEHUB_PASSWORD:-$(openssl rand -hex 16)}"
 PRIMEHUB_VERSION='3.8.0-aws.0'
 EMAIL_NOTIFICATION=${EMAIL_NOTIFICATION:-}
 EMAIL_NOTIFICATION_ID=''
+SCALE_DWON_DELAY=2880 # 48hr
 echo "Name: ${AWS_STACK_NAME}"
 echo "Mode: ${PRIMEHUB_MODE}"
 echo "Region: ${AWS_REGION}"
@@ -78,6 +79,7 @@ echo "Zone: ${AWS_ZONE}"
 echo "System Instance Type: ${SYS_INSTANCE_TYPE}"
 echo "CPU Instance Type: ${CPU_INSTANCE}"
 echo "GPU Instance Type: ${GPU_INSTANCE}"
+echo "Scale Down Delay: ${SCALE_DWON_DELAY}"
 
 EMAIL_NOTIFICATION_ID=$(notification::register ${AWS_STACK_NAME} ${EMAIL_NOTIFICATION})
 echo "Deploy CDK ${AWS_STACK_NAME}"
@@ -89,6 +91,7 @@ export AWS_REGION
   --system-instance-type ${SYS_INSTANCE} \
   --cpu-instance-type ${CPU_INSTANCE} \
   --gpu-instance-type ${GPU_INSTANCE} \
+  --scale-down-delay ${SCALE_DWON_DELAY} \
   --cpu-desired-capacity 1 \
   --mode ${PRIMEHUB_MODE} \
   --keycloak-password ${PASSWORD} \

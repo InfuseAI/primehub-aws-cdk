@@ -24,7 +24,7 @@ const cpuDesiredCapacity = parseInt(app.node.tryGetContext('cpuDesiredCapacity')
 const gpuDesiredCapacity = parseInt(app.node.tryGetContext('gpuDesiredCapacity') || '0', 10) ;
 const cpuMaxCapacity = parseInt(app.node.tryGetContext('cpuMaxCapacity') || '2', 10) ;
 const gpuMaxCapacity = parseInt(app.node.tryGetContext('gpuMaxCapacity') || '2', 10) ;
-
+const scaleDownDelay = parseInt(app.node.tryGetContext('scaleDownDelay') || '10', 10);
 
 const eksStackName = `eks-${name}-cdk-stack`;
 const eksClusterStack = new EKSCluster(app, eksStackName , {
@@ -43,6 +43,7 @@ const eksClusterStack = new EKSCluster(app, eksStackName , {
   gpuDesiredCapacity: gpuDesiredCapacity,
   cpuMaxCapacity: cpuMaxCapacity,
   gpuMaxCapacity: gpuMaxCapacity,
+  scaleDownDelay: scaleDownDelay,
   k8sInfraOnly: k8sInfraOnly,
   primehubVersion: primehubVersion,
 });
