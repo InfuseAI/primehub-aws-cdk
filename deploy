@@ -15,6 +15,7 @@ CPU_DESIRED_SIZE=0
 GPU_DESIRED_SIZE=0
 CPU_MAX_SIZE=2
 GPU_MAX_SIZE=2
+SCALE_DWON_DELAY=10
 SYS_INSTANCE='t3a.xlarge'
 PH_PASSWORD=''
 KC_PASSWORD=''
@@ -51,6 +52,7 @@ Options:
   --gpu-desired-capactiy  <number>            : Set the EKS default GPU node group desired capacity ( Default: 0 )
   --cpu-max-capacity      <number>            : Set the EKS default CPU node group max capacity     ( Default: 2 )
   --gpu-max-capactiy      <number>            : Set the EKS default GPU node group max capacity     ( Default: 2 )
+  --scale-down-delay      <number>            : Set the EKS autoscale scale down delay in minutes   ( Default: 10 )
   --keycloak-password     <password>          : Set the password of Keycloak admin account
   --primehub-password     <password>          : Set the password of PrimeHub default account
   -h, --help                                  : Show this message
@@ -104,6 +106,7 @@ cdk::context() {
       -c gpuDesiredCapacity=$GPU_DESIRED_SIZE \
       -c cpuMaxCapacity=$CPU_MAX_SIZE \
       -c gpuMaxCapacity=$GPU_MAX_SIZE \
+      -c scaleDownDelay=$SCALE_DWON_DELAY \
       -c systemInstance=$SYS_INSTANCE \
       -c basedDomain=$AWS_BASED_DOMAIN \
       -c primehubMode=$PRIMEHUB_MODE \
@@ -186,6 +189,10 @@ args::parse() {
       --gpu-max-capacity)
         shift
         GPU_MAX_SIZE=${1}
+      ;;
+      --scale-down-delay)
+        shift
+        SCALE_DWON_DELAY=${1}
       ;;
       --dry-run)
         DRY_MODE=true

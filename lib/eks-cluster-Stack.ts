@@ -35,6 +35,7 @@ export interface EksStackProps extends cdk.StackProps {
   gpuDesiredCapacity: number;
   cpuMaxCapacity: number;
   gpuMaxCapacity: number;
+  scaleDownDelay: number;
   masterRole?:  string;
   k8sInfraOnly?: string;
   primehubVersion?: string;
@@ -177,7 +178,8 @@ export class EKSCluster extends cdk.Stack {
 
     new ClusterAutoScaler(this, 'cluster-autoscaler', {
       eksCluster: eksCluster,
-      version: 'v1.21.0'
+      version: 'v1.21.0',
+      scaleDownDelay: props.scaleDownDelay,
     });
 
     // AWS ECR

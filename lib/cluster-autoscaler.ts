@@ -4,6 +4,7 @@ import * as eks from '@aws-cdk/aws-eks';
 export interface ClusterAutoScalerProps {
     eksCluster: eks.ICluster,
     version: string,
+    scaleDownDelay?: number,
 }
 
 export class ClusterAutoScaler extends cdk.Construct {
@@ -13,6 +14,7 @@ export class ClusterAutoScaler extends cdk.Construct {
         props: ClusterAutoScalerProps
     ) {
         super(scope,id)
+        const scaleDownDelayOpt = `${props.scaleDownDelay || 10}m`;
 
         new eks.KubernetesManifest(this, id, {
             cluster: props.eksCluster,
@@ -234,6 +236,7 @@ export class ClusterAutoScaler extends cdk.Construct {
                             props.eksCluster.clusterName,
                             "--balance-similar-node-groups",
                             "--skip-nodes-with-system-pods=false",
+                            `--scale-down-delay-after-add=${scaleDownDelayOpt}`,
                           ],
                           volumeMounts: [
                             {
