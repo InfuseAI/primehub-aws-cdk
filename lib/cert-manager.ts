@@ -17,7 +17,7 @@ const issuer = {
     },
     spec: {
         acme: {
-            email: 'support@infuseai.io',
+            email: 'you@example.com',
             server: 'https://acme-v02.api.letsencrypt.org/directory',
             privateKeySecretRef: {
                 name: 'letsencrypt'
@@ -25,7 +25,6 @@ const issuer = {
             solvers: [
                 { http01: { ingress: { class: 'nginx' } } }
             ]
-            
         }
     }
 };
@@ -61,7 +60,7 @@ export class CertManager extends cdk.Construct {
             manifest: [issuer],
             overwrite: true
         });
-        
+
         clusterIssuer.node.addDependency(certManager);
     }
 };
