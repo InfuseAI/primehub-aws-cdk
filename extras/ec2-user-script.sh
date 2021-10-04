@@ -90,6 +90,7 @@ export AWS_REGION
   --region ${AWS_REGION} \
   --zone ${AWS_ZONE} \
   --email ${EMAIL_NOTIFICATION} \
+  --enforce-update-password \
   --primehub-version ${PRIMEHUB_VERSION} \
   --system-instance-type ${SYS_INSTANCE} \
   --cpu-instance-type ${CPU_INSTANCE} \
