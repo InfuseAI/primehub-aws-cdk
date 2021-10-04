@@ -53,3 +53,7 @@ cdk destroy
 Or please reference the following document to destroy the cluster.
 
 * [How to destroy PrimeHub Cluster created by Launch Stack URL](docs/destroy-cluster.md)
+
+### FAQ
+
+Please see [FAQ.md](FAQ.md)
