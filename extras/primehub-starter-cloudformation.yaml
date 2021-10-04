@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Description: |
   The PrimeHub Starter Stack.
   A new stack `eks-<Stack-name>-cdk-stack` will be created later in your AWS.
@@ -13,36 +13,37 @@ Resources:
       ResourceSignal:
         Timeout: PT1H
     Properties:
-      ImageId: !FindInMap [ AmazonLinux2RegionMap202107212, !Ref 'AWS::Region', AMI ]
-      InstanceType: "t3.micro"
+      ImageId:
+        !FindInMap [AmazonLinux2RegionMap202107212, !Ref 'AWS::Region', AMI]
+      InstanceType: 't3.micro'
       IamInstanceProfile: !Ref InstanceProfile
       UserData:
         Fn::Base64: !Sub |
-              #!/bin/sh
-              curl -o run-cdk.sh https://raw.githubusercontent.com/InfuseAI/primehub-aws-cdk/cfTemplate/extras/ec2-user-script.sh
-              chmod a+x run-cdk.sh
+          #!/bin/sh
+          curl -o run-cdk.sh https://raw.githubusercontent.com/InfuseAI/primehub-aws-cdk/cfTemplate/extras/ec2-user-script.sh
+          chmod a+x run-cdk.sh
 
-              # export vars
-              export PRIMEHUB_MODE="${PrimeHubInstallMode}"
-              export AWS_STACK_NAME="${AWS::StackName}"
-              export AWS_REGION="${AWS::Region}"
-              export GIT_TAG='cfTemplate'
-              export CPU_INSTANCE="${CPUInstanceType}"
-              export GPU_INSTANCE="${GPUInstanceType}"
-              export EMAIL_NOTIFICATION="${EmailNotification}"
+          # export vars
+          export PRIMEHUB_MODE="${PrimeHubInstallMode}"
+          export AWS_STACK_NAME="${AWS::StackName}"
+          export AWS_REGION="${AWS::Region}"
+          export GIT_TAG='cfTemplate'
+          export CPU_INSTANCE="${CPUInstanceType}"
+          export GPU_INSTANCE="${GPUInstanceType}"
+          export EMAIL_NOTIFICATION="${EmailNotification}"
 
-              ./run-cdk.sh > /var/log/primehub-starter.log
-              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource PrimeHubCDKBootstrapEC2
+          ./run-cdk.sh > /var/log/primehub-starter.log
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource PrimeHubCDKBootstrapEC2
 
-              # delete the starter stack
-              aws cloudformation delete-stack --stack-name ${AWS::StackName} --region ${AWS::Region}
+          # delete the starter stack
+          aws cloudformation delete-stack --stack-name ${AWS::StackName} --region ${AWS::Region}
       SecurityGroups:
-      - !Ref PrimeHubCDKBootstrapEC2SecurityGroup
+        - !Ref PrimeHubCDKBootstrapEC2SecurityGroup
   AwsIamRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
@@ -60,20 +61,20 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-            - Action:
-              - cloudformation:*
-              Resource: "*"
-              Effect: Allow
-            - Condition:
-                ForAnyValue:StringEquals:
-                  aws:CalledVia:
-                  - cloudformation.amazonaws.com
-              Action: "*"
-              Resource: "*"
-              Effect: Allow
-            - Action: s3:*
-              Resource: arn:aws:s3:::cdktoolkit-stagingbucket-*
-              Effect: Allow
+              - Action:
+                  - cloudformation:*
+                Resource: '*'
+                Effect: Allow
+              - Condition:
+                  ForAnyValue:StringEquals:
+                    aws:CalledVia:
+                      - cloudformation.amazonaws.com
+                Action: '*'
+                Resource: '*'
+                Effect: Allow
+              - Action: s3:*
+                Resource: arn:aws:s3:::cdktoolkit-stagingbucket-*
+                Effect: Allow
   InstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:
@@ -83,8 +84,8 @@ Resources:
   PrimeHubCDKBootstrapEC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-        GroupDescription: PrimeHub CDK Bootstrap Security Group
-        SecurityGroupIngress:
+      GroupDescription: PrimeHub CDK Bootstrap Security Group
+      SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
