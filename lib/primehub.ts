@@ -12,6 +12,7 @@ export interface PrimeHubProps {
     ecrRepoName: string,
     primehubMode: string,
     primehubDomain: string,
+    primehubUserEmail: string,
     acmeEnabled: boolean,
     sshCustomHostname?: string,
     primehubVersion?: string,
@@ -25,6 +26,7 @@ export interface PrimeHubProps {
     dryRunMode?: boolean,
     cpuInstance: string,
     gpuInstance: string,
+    enforceUpdatePassword?: boolean
 }
 
 interface HelmValues {
@@ -81,7 +83,9 @@ export class PrimeHub extends cdk.Construct {
                 storageClass: 'gp2'
             },
             bootstrap: {
+                email: props.primehubUserEmail,
                 password: props.primehubPassword,
+                enforceUpdatePassword: props.enforceUpdatePassword,
                 instanceTypes: instanceTypes
             },
             graphql: {

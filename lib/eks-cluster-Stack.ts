@@ -23,6 +23,7 @@ import { BlockDeviceVolume } from '@aws-cdk/aws-autoscaling';
 export interface EksStackProps extends cdk.StackProps {
   name:  string;
   username: string;
+  email: string;
   primehubMode: string;
   basedDomain:  string;
   primehubPassword: string;
@@ -39,6 +40,7 @@ export interface EksStackProps extends cdk.StackProps {
   masterRole?:  string;
   k8sInfraOnly?: string;
   primehubVersion?: string;
+  enforceUpdatePassword?: boolean;
 }
 
 export class EKSCluster extends cdk.Stack {
@@ -364,6 +366,7 @@ export class EKSCluster extends cdk.Stack {
       ecrRepoName: ecrRepoName,
       primehubMode: props.primehubMode,
       primehubDomain: primehubDomain,
+      primehubUserEmail: props.email,
       acmeEnabled: acmeEnabled,
       sshCustomHostname: sshCustomHostname,
       primehubVersion: props.primehubVersion,

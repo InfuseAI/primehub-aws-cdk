@@ -25,6 +25,7 @@ function notification::completed() {
   local name=$1
   local id=$2
   local region=$3
+  local password=$4
 
   cf_output=$(aws cloudformation describe-stacks --stack-name eks-${name}-cdk-stack --region ${region} --query "Stacks[0].Outputs[*]" --output text)
   stackId=$(aws cloudformation describe-stacks --stack-name eks-${name}-cdk-stack --region ${region} --query Stacks[0].StackId | sed 's/"//g')
@@ -35,7 +36,8 @@ function notification::completed() {
       --data-raw "{
           \"endpoint\": \"${PRIMEHUB_URL}\",
           \"region\": \"${region}\",
-          \"stackId\": \"${stackId}\"
+          \"stackId\": \"${stackId}\",
+          \"password\": \"${password}\"
         }"
   fi
 }
@@ -68,7 +70,7 @@ SYS_INSTANCE='t3.xlarge'
 CPU_INSTANCE="${CPU_INSTANCE:-'t3.xlage'}"
 GPU_INSTANCE="${GPU_INSTANCE:-'g4dn.xlarge'}"
 PASSWORD="${PRIMEHUB_PASSWORD:-$(openssl rand -hex 16)}"
-PRIMEHUB_VERSION='3.8.0-aws.0'
+PRIMEHUB_VERSION='3.8.0-aws.1'
 EMAIL_NOTIFICATION=${EMAIL_NOTIFICATION:-}
 EMAIL_NOTIFICATION_ID=''
 SCALE_DWON_DELAY=2880 # 48hr
@@ -87,6 +89,7 @@ export AWS_REGION
 ./deploy ${AWS_STACK_NAME} \
   --region ${AWS_REGION} \
   --zone ${AWS_ZONE} \
+  --email ${EMAIL_NOTIFICATION} \
   --primehub-version ${PRIMEHUB_VERSION} \
   --system-instance-type ${SYS_INSTANCE} \
   --cpu-instance-type ${CPU_INSTANCE} \
@@ -97,7 +100,7 @@ export AWS_REGION
   --keycloak-password ${PASSWORD} \
   --primehub-password ${PASSWORD} || exit 1
 
-notification::completed ${AWS_STACK_NAME} ${EMAIL_NOTIFICATION_ID} ${AWS_REGION}
+notification::completed ${AWS_STACK_NAME} ${EMAIL_NOTIFICATION_ID} ${AWS_REGION} ${PASSWORD}
 echo "Completed"
 exit 0
 
