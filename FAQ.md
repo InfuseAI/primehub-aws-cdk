@@ -1,17 +1,17 @@
 # FAQ
 
-**Q: If I want to buy a license, how much will I have to pay?**
-  
-We provide a starter plan with 999 USD/monthly with 3 active users, otherwise If you need more resources please [contact us](https://www.infuseai.io/company/contactus).
+### Q: How much does a license cost?
 
-**Q: Does the license payment include AWS costs?**
-  
-No, you should pay the infrastructe fee by yourself.
+We provide a starter plan with 999 USD/month with 3 active users. Please [contact us](https://www.infuseai.io/company/contactus) about your need.
 
-**Q: How many resources usage on AWS by PrimeHub 1-Click**
+### Q: Does the license pricing includes AWS costs?
 
-PrimeHub created by 1-Click will default to use **1*t3.xlarge EC2 instance** and **1*EKS cluster**.
+No. Check your AWS billing system for the cost of your infrastructure.
 
-**Q: If I going to use 1 click install on AWS, how much will I have to pay for AWS?**
+### Q: What's the minimum resources required by PrimeHub 1-Click
 
- It will cost around US$200 per month by default installation by PrimeHub 1-Click.
+By default, PrimeHub 1-click requires **1*t3.xlarge EC2 instance** and **1*EKS cluster**.
+
+### Q: What's the estimated cost for the minimum require requirement?
+
+About USD$200 per month.
