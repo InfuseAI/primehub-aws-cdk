@@ -8,7 +8,7 @@ We provide a starter plan with 999 USD/monthly with 3 active users, otherwise If
   
 No, you should pay the infrastructe fee by yourself.
 
-**Q: How many resources usage on AWS by PrimeHub 1-Click
+**Q: How many resources usage on AWS by PrimeHub 1-Click**
 
 PrimeHub created by 1-Click will default to use **1*t3.xlarge EC2 instance** and **1*EKS cluster**.
 
