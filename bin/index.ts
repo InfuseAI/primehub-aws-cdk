@@ -10,6 +10,7 @@ const env = {
 };
 const username = app.node.tryGetContext('username') || process.env.USERNAME || 'dev@infuseai.io';
 const name = app.node.tryGetContext('name') || process.env.NAME || 'cdk';
+const email = app.node.tryGetContext('email') || '';
 const primehubMode = app.node.tryGetContext('primehubMode') || process.env.PRIMEHUB_MODE || 'ee';
 const basedDomain = app.node.tryGetContext('basedDomain') || process.env.AWS_BASED_DOMAIN || '';
 const primehubVersion = app.node.tryGetContext('primehubVersion') || null;
@@ -20,6 +21,7 @@ const cpuInstance = app.node.tryGetContext('cpuInstance') || 't3a.xlarge';
 const gpuInstance = app.node.tryGetContext('gpuInstance') || 'g4dn.xlarge';
 const systemInstance = app.node.tryGetContext('systemInstance') || 't3a.xlarge';
 const k8sInfraOnly = app.node.tryGetContext('k8sInfraOnly') || 'false';
+const enforceUpdatePassword = ((app.node.tryGetContext('enforceUpdatePassword') || 'false') === 'false') ? false : true;
 const cpuDesiredCapacity = parseInt(app.node.tryGetContext('cpuDesiredCapacity') || '0', 10) ;
 const gpuDesiredCapacity = parseInt(app.node.tryGetContext('gpuDesiredCapacity') || '0', 10) ;
 const cpuMaxCapacity = parseInt(app.node.tryGetContext('cpuMaxCapacity') || '2', 10) ;
@@ -31,6 +33,7 @@ const eksClusterStack = new EKSCluster(app, eksStackName , {
   env: env,
   name: name,
   username: username,
+  email: email,
   primehubMode: primehubMode,
   basedDomain: basedDomain,
   keycloakPassword: keycloakPassword,
@@ -45,6 +48,7 @@ const eksClusterStack = new EKSCluster(app, eksStackName , {
   gpuMaxCapacity: gpuMaxCapacity,
   scaleDownDelay: scaleDownDelay,
   k8sInfraOnly: k8sInfraOnly,
+  enforceUpdatePassword: enforceUpdatePassword,
   primehubVersion: primehubVersion,
 });
 

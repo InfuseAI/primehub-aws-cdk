@@ -6,6 +6,7 @@ DRY_MODE=false
 PRIMEHUB_MODE=ee
 PRIMEHUB_VERSION=''
 K8S_INFRA_ONLY=false
+ENFORCE_UPDATE_PASSWORD=false
 AWS_ACCOUNT=${AWS_ACCOUNT:-}
 AWS_REGION=${AWS_REGION:-$(aws configure get region || echo 'ap-northeast-1')}
 AWS_ZONE=${AWS_ZONE:-a}
@@ -19,6 +20,7 @@ SCALE_DWON_DELAY=10
 SYS_INSTANCE='t3a.xlarge'
 PH_PASSWORD=''
 KC_PASSWORD=''
+PH_USER_EMAIL=''
 
 info() {
   echo -e "\033[0;32m$1\033[0m"
@@ -43,7 +45,9 @@ Options:
   --zone                  <zone>              : Set the AWS availability zones  ( Default: ${AWS_ZONE} )
   --dry-run                                   : Dry run AWS CDK deploy
   --k8s-infra                                 : Only setup AWS ESK without installing PrimeHub
+  --enforce-update-password                   : Enforce default user reset password after first login
   --domain                <base domain>       : Provide the base domain managed by AWS Route 53
+  --email                 <email>             : Set the email of default user
   --primehub-version      <version>           : Set the specific version number of PrimeHub
   --system-instance-type  <ec2 instance type> : Set the EKS default system node group instance type ( Default: ${SYS_INSTANCE} )
   --cpu-instance-type     <ec2 instance type> : Set the EKS default CPU node group instance type    ( Default: ${CPU_INSTANCE} )
@@ -99,6 +103,7 @@ cdk::context() {
       -c name=$NAME \
       -c region=$AWS_REGION \
       -c zone=$AWS_ZONE \
+      -c email=$PH_USER_EMAIL \
       -c primehubVersion=$PRIMEHUB_VERSION \
       -c cpuInstance=$CPU_INSTANCE \
       -c gpuInstance=$GPU_INSTANCE \
@@ -115,6 +120,7 @@ cdk::context() {
       -c GraphqlSecretKey=$ADMIN_UI_GRAPHQL_SECRET_KEY \
       -c HubProxySecretKey=$HUB_PROXY_SECRET_TOKEN \
       -c k8sInfraOnly=$K8S_INFRA_ONLY \
+      -c enforceUpdatePassword=$ENFORCE_UPDATE_PASSWORD \
       --json --strict > cdk.context.tmp
       mv cdk.context.tmp cdk.context.json
       cdk context
@@ -157,6 +163,10 @@ args::parse() {
       --zone)
         shift
         AWS_ZONE=${1}
+      ;;
+      --email)
+        shift
+        PH_USER_EMAIL=${1}
       ;;
       --primehub-version)
         shift
@@ -211,6 +221,9 @@ args::parse() {
       ;;
       --k8s-infra)
         K8S_INFRA_ONLY=true
+      ;;
+      --enforce-update-password)
+        ENFORCE_UPDATE_PASSWORD=true
       ;;
       -h|--help)
         usage
