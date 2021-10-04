@@ -38,7 +38,11 @@ cd primehub-aws-cdk
 
 ### Login
 
-The above deployment may take around 20 minutes, depending on your region, the data center workload, and networking status. Go and check your AWS CloudFormatioin console. By clicking `Stacks`, you should have the deployed stack named after `<your-stack-project-name>-cdk-stack` in the `Stack name` column. Click `<your-stack-project-name>-cdk-stack`. The console will show you the details of your stack a.k.a. `<your-stack-project-name>-cdk-stack`.
+The above deployment may take around 20 minutes, depending on your region, the data center workload, and networking status. 
+
+You will receive an email containing login credentials of your cluster.
+
+Or you can go and check your AWS CloudFormatioin console. By clicking `Stacks`, you should have the deployed stack named after `<your-stack-project-name>-cdk-stack` in the `Stack name` column. Click `<your-stack-project-name>-cdk-stack`. The console will show you the details of your stack a.k.a. `<your-stack-project-name>-cdk-stack`.
 
 Select the `Outputs` tab of the stack details. Refer to `PrimeHubURL` to get the URL of PrimeHub, and get the account name and password according to `PrimeHubAccount` and `KeycloakPassword`.
 
