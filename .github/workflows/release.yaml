@@ -1,4 +1,4 @@
-name: "Release AWS One Click CloudFormation Template"
+name: 'Release AWS One Click CloudFormation Template'
 on:
   release:
     types:

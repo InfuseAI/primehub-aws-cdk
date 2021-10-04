@@ -2,9 +2,9 @@ import * as cdk from '@aws-cdk/core';
 import * as eks from '@aws-cdk/aws-eks';
 
 export interface NvidiaDevicePluginProps {
-  eksCluster: eks.ICluster,
-  nodeSelector?: {[key: string]: string},
-  tolerations?: {[key: string]: string}[]
+  eksCluster: eks.ICluster;
+  nodeSelector?: { [key: string]: string };
+  tolerations?: { [key: string]: string }[];
 }
 
 interface HelmValues {
@@ -27,9 +27,9 @@ export class NvidiaDevicePlugin extends cdk.Construct {
       {
         key: 'nvidia.com/gpu',
         operator: 'Exists',
-        effect: 'NoSchedule'
-      }
-    ] as {[key: string]: string}[];
+        effect: 'NoSchedule',
+      },
+    ] as { [key: string]: string }[];
 
     const helmValues = {
       nodeSelector: props.nodeSelector,
