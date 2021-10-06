@@ -1,4 +1,4 @@
-# Upgrade PrimeHub installed by primehub-aws-cdk
+# Administration PrimeHub installed by primehub-aws-cdk
 
 ## How to upgrade existing EKS Cluster
 
