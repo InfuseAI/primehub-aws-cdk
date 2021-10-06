@@ -74,7 +74,7 @@ export class EKSCluster extends cdk.Stack {
     }
 
     const eksCluster = new eks.Cluster(this, 'Cluster', {
-      version: eks.KubernetesVersion.V1_20,
+      version: eks.KubernetesVersion.V1_21,
       mastersRole: masterRole,
       clusterName: clusterName,
       outputClusterName: true,

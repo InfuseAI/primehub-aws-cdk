@@ -46,6 +46,9 @@ Or you can go and check your AWS CloudFormatioin console. By clicking `Stacks`, 
 
 Select the `Outputs` tab of the stack details. Refer to `PrimeHubURL` to get the URL of PrimeHub, and get the account name and password according to `PrimeHubAccount` and `KeycloakPassword`.
 
+### Upgrade
+
+Please reference [Upgrade PrimeHub installed by primehub-aws-cdk](upgrade.md)
 ### Destroy EKS Stack
 
 Way to destroy the existing EKS stack
