@@ -2,7 +2,8 @@
 IFS=$'\t'
 set -eo pipefail
 
-NAME=${NAME}
+TASK='connect'
+NAME=''
 AWS_REGION=${AWS_REGION}
 
 info() {
@@ -29,6 +30,51 @@ Options:
 EOF
 }
 
+function no_eks_cluster_found() {
+  if [ "${AWS_REGION}" == "" ]; then
+    error "[Not Found] EKS Cluster"
+  else
+    error "[Not Found] EKS Cluster in region ${AWS_REGION}"
+  fi
+  warn "[Available] EKS Cluster running"
+  list_available_eks_clsuter
+}
+
+function list_available_eks_clsuter() {
+  local region_opt
+  if [[ ${AWS_REGION} != '' ]]; then
+    region_opt="--region ${AWS_REGION}"
+  fi
+  eval "aws ${region_opt} cloudformation list-stacks --stack-status-filter CREATE_COMPLETE" | grep StackName | grep -e 'eks-.*-cdk-stack"' | sed 's/.*: "\(.*\)",/\1/'
+}
+
+function verifyCfStackName() {
+  IFS=$'\t\n'
+  local name=$1
+  local stackName
+
+  if command -v cdk > /dev/null && [[ $name == '' ]]; then
+    name=$(cdk context -j | grep '"name":' | awk '{print $2}' | sed 's/"\(.*\)",/\1/g' || '')
+  fi
+
+  if [[ $name =~ eks-.*-cdk-stack$ ]]; then
+    stackName=$name
+  else
+    stackName="eks-$name-cdk-stack"
+  fi
+
+  for i in $(list_available_eks_clsuter)
+  do
+    if [[ $i == $stackName ]]; then
+      echo $stackName
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+
 function replace_domain() {
   local primehub_domain=$1
   local elb_domain=${2:-}
@@ -48,16 +94,17 @@ function replace_domain() {
 }
 
 function connect() {
-  if [ "${AWS_REGION}" == "" ]; then
+  IFS=$'\t'
+  local stackName=$1
+
+  if command -v cdk > /dev/null && [ "${AWS_REGION}" == "" ]; then
     AWS_REGION=$(cdk context -j | grep '"region":' | awk '{print $2}' | sed 's/"\(.*\)",/\1/g' || echo "")
   fi
-  if [ "${NAME}" == "" ]; then
-    NAME=$(cdk context -j | grep '"name":' | awk '{print $2}' | sed 's/"\(.*\)",/\1/g' || echo "cdk")
-  fi
+
   if [ "${AWS_REGION}" != "" ]; then
-    cf_output=$(aws cloudformation describe-stacks --stack-name eks-${NAME}-cdk-stack --region ${AWS_REGION} --query "Stacks[0].Outputs[*]" --output text)
+    cf_output=$(aws cloudformation describe-stacks --stack-name ${stackName} --region ${AWS_REGION} --query "Stacks[0].Outputs[*]" --output text)
   else
-    cf_output=$(aws cloudformation describe-stacks --stack-name eks-${NAME}-cdk-stack --query "Stacks[0].Outputs[*]" --output text)
+    cf_output=$(aws cloudformation describe-stacks --stack-name ${stackName} --query "Stacks[0].Outputs[*]" --output text)
   fi
 
   cluster_name=$(echo ${cf_output} | grep ^ClusterClusterName | awk '{print $2}')
@@ -99,6 +146,9 @@ function connect() {
 function main() {
   while (( "$#" )); do
     case "${1:-}" in
+      --list)
+        TASK='list'
+      ;;
       --region)
         shift
         AWS_REGION=${1}
@@ -120,7 +170,22 @@ function main() {
     shift || (usage; exit 1)
   done
 
-  connect
+  if ! command -v kubectl > /dev/null; then
+    error '[Error] No kubectl installed'
+    echo '  Please install kubectl'
+  fi
+  if ! command -v aws > /dev/null; then
+    error '[Error] No awscli installed'
+    echo '  Please install awscli'
+  fi
+
+  if [ "${TASK}" == 'list' ]; then
+    info "[Available] EKS Cluster"
+    list_available_eks_clsuter
+  else
+    stackName=$(verifyCfStackName $NAME) || (no_eks_cluster_found; exit 1)
+    connect $stackName
+  fi
 }
 
 main "$@"
