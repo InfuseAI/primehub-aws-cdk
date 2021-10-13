@@ -11,7 +11,7 @@ EMAIL_NOTIFICATION_API="https://ykek6s29ol.execute-api.us-east-1.amazonaws.com/d
 function notification::register() {
   local name=$1
   local email=$2
-  local subscribe=${3:-false}
+  local subscribe=${3:-no}
   if [[ "${email}" != "" ]]; then
     curl -s --location --request POST "${EMAIL_NOTIFICATION_API}" \
       --header 'Content-Type: application/json' \

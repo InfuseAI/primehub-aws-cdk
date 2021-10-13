@@ -144,9 +144,9 @@ Parameters:
   SubscribeNewsLetter:
     Type: String
     AllowedValues:
-      - "true"
-      - "false"
-    Default: "false"
+      - "yes"
+      - "no"
+    Default: "no"
     Description: Subscribe our newsletter, stay up to date on MLOps insights and news
   PrimeHubInstallMode:
     Type: String
