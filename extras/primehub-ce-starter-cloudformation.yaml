@@ -31,6 +31,7 @@ Resources:
           export CPU_INSTANCE="${CPUInstanceType}"
           export GPU_INSTANCE="${GPUInstanceType}"
           export EMAIL_NOTIFICATION="${EmailNotification}"
+          export SUBSCRIBE_NEWSLETTER="${SubscribeNewsLetter}"
 
           ./run-cdk.sh > /var/log/primehub-starter.log
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource PrimeHubCDKBootstrapEC2
@@ -139,7 +140,13 @@ Parameters:
     Type: String
     AllowedPattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
     ConstraintDescription: Must be a valid email address.
-    Description: Please provide an email for notifying the cluster installation status. This is for sending credential only, no marketing material, no spam
+    Description: Please provide an email for notifying the cluster installation status. If you don't subscribe our news latter, this will send credential only, no marketing material, and no spam
+  SubscribeNewsLetter:
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+    Description: Subscribe our newsletter, stay up to date on MLOps insights and news
   PrimeHubInstallMode:
     Type: String
     Default: ce
