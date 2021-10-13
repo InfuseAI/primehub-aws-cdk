@@ -142,6 +142,7 @@ Parameters:
     ConstraintDescription: Must be a valid email address.
     Description: Please provide an email for notifying the cluster installation status. If you don't subscribe our news latter, this will send credential only, no marketing material, and no spam
   SubscribeNewsLetter:
+    Type: String
     AllowedValues:
       - "true"
       - "false"
