@@ -11,12 +11,14 @@ EMAIL_NOTIFICATION_API="https://ykek6s29ol.execute-api.us-east-1.amazonaws.com/d
 function notification::register() {
   local name=$1
   local email=$2
+  local subscribe=${3:-false}
   if [[ "${email}" != "" ]]; then
     curl -s --location --request POST "${EMAIL_NOTIFICATION_API}" \
       --header 'Content-Type: application/json' \
       --data-raw "{
           \"email\": \"${email}\",
-          \"name\": \"${name}\"
+          \"name\": \"${name}\",
+          \"subscribe\": \"${subscribe}\"
         }" | jq .id -r
   fi
 }
@@ -83,7 +85,7 @@ echo "CPU Instance Type: ${CPU_INSTANCE}"
 echo "GPU Instance Type: ${GPU_INSTANCE}"
 echo "Scale Down Delay: ${SCALE_DWON_DELAY}"
 
-EMAIL_NOTIFICATION_ID=$(notification::register ${AWS_STACK_NAME} ${EMAIL_NOTIFICATION})
+EMAIL_NOTIFICATION_ID=$(notification::register ${AWS_STACK_NAME} ${EMAIL_NOTIFICATION} ${SUBSCRIBE_NEWSLETTER})
 echo "Deploy CDK ${AWS_STACK_NAME}"
 export AWS_REGION
 ./deploy ${AWS_STACK_NAME} \
