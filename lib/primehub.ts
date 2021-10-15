@@ -26,7 +26,7 @@ export interface PrimeHubProps {
   dryRunMode?: boolean;
   cpuInstance: string;
   gpuInstance: string;
-  enforceUpdatePassword: boolean;
+  enforceUpdatePassword?: boolean;
 }
 
 interface HelmValues {
@@ -90,7 +90,7 @@ export class PrimeHub extends cdk.Construct {
       bootstrap: {
         email: props.primehubUserEmail,
         password: props.primehubPassword,
-        enforceUpdatePassword: props.enforceUpdatePassword,
+        enforceUpdatePassword: props.enforceUpdatePassword || false,
         instanceTypes: instanceTypes,
       },
       graphql: {
