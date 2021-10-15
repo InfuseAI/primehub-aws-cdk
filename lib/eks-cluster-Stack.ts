@@ -443,6 +443,7 @@ export class EKSCluster extends cdk.Stack {
       dryRunMode: dryRunMode,
       cpuInstance: props.cpuInstance,
       gpuInstance: props.gpuInstance,
+      enforceUpdatePassword: props.enforceUpdatePassword,
     });
 
     const primehubReadyHelmCharts = new cdk.ConcreteDependable();

@@ -26,7 +26,7 @@ export interface PrimeHubProps {
   dryRunMode?: boolean;
   cpuInstance: string;
   gpuInstance: string;
-  enforceUpdatePassword?: boolean;
+  enforceUpdatePassword: boolean;
 }
 
 interface HelmValues {
