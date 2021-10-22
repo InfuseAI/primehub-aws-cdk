@@ -87,6 +87,11 @@ export class PrimeHub extends cdk.Construct {
       groupvolume: {
         storageClass: 'gp2',
       },
+      console: {
+        npsSurvey: {
+          enabled: true,
+        },
+      },
       bootstrap: {
         email: props.primehubUserEmail,
         password: props.primehubPassword,
