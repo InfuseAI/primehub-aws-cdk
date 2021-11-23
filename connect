@@ -122,7 +122,7 @@ function connect() {
 
   info "[PrimeHub] Config"
   AWS_ELB_DOMAIN=$(echo ${cf_output} | grep ^AWSELBDomain | awk '{$1 = ""; print $0;}' | sed 's/ //g')
-  AWS_CLOUDFRONT_DOMAIN=$(echo ${cf_output} | grep ^AWSCloudFrontDomain | awk '{$1 = ""; print $0;}' | sed 's/ //g')
+  AWS_CLOUDFRONT_DOMAIN=$(echo ${cf_output} | grep ^AWSCloudFrontDomain | awk '{$1 = ""; print $0;}' | sed 's/ //g' || TRUE)
   PRIMEHUB_URL=$(echo ${cf_output} | grep ^PrimeHubURL | awk '{$1 = ""; print $0;}' | sed 's/ //g')
   KC_URL="${PRIMEHUB_URL}/auth"
   PH_USER=$(echo ${cf_output} | grep ^PrimeHubAccount | awk '{$1 = ""; print $0;}' | sed 's/ //g')
