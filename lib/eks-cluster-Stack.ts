@@ -364,6 +364,7 @@ export class EKSCluster extends cdk.Stack {
 
     const certManager = new CertManager(this, 'cert-manager', {
       eksCluster: eksCluster,
+      email: props.email || props.username,
     });
 
     const awsElbAddress = new eks.KubernetesObjectValue(this, 'AWS-ELB', {

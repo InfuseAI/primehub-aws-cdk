@@ -3,6 +3,7 @@ import * as eks from '@aws-cdk/aws-eks';
 
 export interface CertManagerProps {
   eksCluster: eks.ICluster;
+  email?: string;
 }
 
 interface HelmValues {
@@ -48,6 +49,10 @@ export class CertManager extends cdk.Construct {
       values: helmValues,
       wait: true,
     });
+
+    if (props.email) {
+      issuer.spec.acme.email = props.email;
+    }
 
     const clusterIssuer = new eks.KubernetesManifest(this, id, {
       cluster: props.eksCluster,
