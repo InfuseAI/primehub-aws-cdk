@@ -388,7 +388,7 @@ export class EKSCluster extends cdk.Stack {
 
       new route53.ARecord(this, 'ARecord', {
         zone: hostedZone,
-        recordName: `*.${clusterName}.${props.basedDomain}.`,
+        recordName: `*.${props.name}.${props.basedDomain}.`,
         target: route53.RecordTarget.fromAlias({
           bind() {
             return {
@@ -398,7 +398,7 @@ export class EKSCluster extends cdk.Stack {
           },
         }),
       });
-      primehubDomain = `hub.${clusterName}.${props.basedDomain}`;
+      primehubDomain = `hub.${props.name}.${props.basedDomain}`;
     } else {
       // Create cloudfront distribution
       const cfd = new cf.Distribution(this, 'myDist', {
