@@ -108,7 +108,7 @@ function connect() {
   fi
 
   cluster_name=$(echo ${cf_output} | grep ^ClusterClusterName | awk '{print $2}')
-  k8s_context_cmd="$(echo ${cf_output} | grep ^ClusterConfigCommand | awk '{$1 = ""; print $0;}') --alias $cluster_name"
+  k8s_context_cmd="$(echo ${cf_output} | grep ^ClusterConfigCommand | awk '{$1 = ""; print $0;}') --alias ${EKS_CLUSTER_ALIAS:-$cluster_name}"
   config_bucket=$(echo ${cf_output} | grep ^PrimeHubConfigS3Bucket | awk '{$1 = ""; print $0;}' | sed 's/ //g')
 
   info "[Connect] EKS Cluster ${cluster_name}"
@@ -152,6 +152,10 @@ function main() {
       --region)
         shift
         AWS_REGION=${1}
+      ;;
+      --alias)
+        shift
+        EKS_CLUSTER_ALIAS=${1}
       ;;
       -h|--help)
         usage
