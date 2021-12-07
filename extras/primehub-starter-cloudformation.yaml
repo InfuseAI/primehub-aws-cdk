@@ -33,7 +33,7 @@ Resources:
           export EMAIL_NOTIFICATION="${EmailNotification}"
           export SUBSCRIBE_NEWSLETTER="${SubscribeNewsLetter}"
 
-          ./run-cdk.sh > /var/log/primehub-starter.log 2> /var/log/primehub-starter.err
+          ./run-cdk.sh > /var/log/primehub-starter.log 2>&1
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource PrimeHubCDKBootstrapEC2
 
           # delete the starter stack
