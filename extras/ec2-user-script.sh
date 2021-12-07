@@ -53,7 +53,7 @@ node -e "console.log('Running Node.js ' + process.version)"
 
 echo "Install Yarn and CDK"
 npm install -g yarn
-npm install -g aws-cdk
+npm install -g aws-cdk@v1.134
 
 echo "Download PrimeHub Starter"
 tag=${GIT_TAG:-cfTemplate}
