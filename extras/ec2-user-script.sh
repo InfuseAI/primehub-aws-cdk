@@ -48,7 +48,7 @@ echo "Install Node"
 cd /root
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 . ~/.nvm/nvm.sh
-nvm install node
+nvm install v16
 node -e "console.log('Running Node.js ' + process.version)"
 
 echo "Install Yarn and CDK"
