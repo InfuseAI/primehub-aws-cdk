@@ -132,7 +132,7 @@ cdk::context() {
 
 cdk::deploy() {
   info "[Bootstrap] aws://${AWS_ACCOUNT}/${AWS_REGION}"
-  cdk bootstrap aws://${AWS_ACCOUNT}/${AWS_REGION}
+  cdk bootstrap --force aws://${AWS_ACCOUNT}/${AWS_REGION}
 
   info "[Deploy] eks-$NAME by $USERNAME"
   cdk deploy
