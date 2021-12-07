@@ -76,6 +76,11 @@ Resources:
               - Action: s3:*
                 Resource: arn:aws:s3:::cdktoolkit-stagingbucket-*
                 Effect: Allow
+              - Action:
+                  - sts:AssumeRole
+                Effect: Allow
+                Resource:
+                  - arn:aws:iam::*:role/cdk-*
   InstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:
