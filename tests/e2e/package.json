@@ -1,0 +1,13 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "cucumber-js features/**"
+  },
+  "repository": "https://github.com/InfuseAI/primehub-aws-cdk",
+  "license": "MIT",
+  "devDependencies": {
+    "@cucumber/cucumber": "^8.0.0-rc.1"
+  }
+}
