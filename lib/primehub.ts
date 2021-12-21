@@ -33,6 +33,13 @@ interface HelmValues {
   [key: string]: any;
 }
 
+interface Toleration {
+  key: string;
+  operator: string;
+  effect: string;
+  value?: string;
+}
+
 export class PrimeHub extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: PrimeHubProps) {
     super(scope, id);
@@ -374,7 +381,7 @@ KEYCLOAK_DEPLOY=true`;
               operator: 'Equal',
               value: 'user',
               effect: 'NoSchedule',
-            },
+            } as Toleration,
           ],
         },
       };
@@ -410,7 +417,7 @@ KEYCLOAK_DEPLOY=true`;
             operator: 'Equal',
             value: 'user',
             effect: 'NoSchedule',
-          },
+          } as Toleration,
         ],
       },
     };
@@ -442,7 +449,7 @@ KEYCLOAK_DEPLOY=true`;
             operator: 'Equal',
             value: 'user',
             effect: 'NoSchedule',
-          },
+          } as Toleration,
         ],
       },
     };
