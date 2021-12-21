@@ -345,7 +345,6 @@ KEYCLOAK_DEPLOY=true`;
       key: 'nvidia.com/gpu',
       operator: 'Exists',
       effect: 'NoSchedule',
-      value: 'true',
     };
 
     // Quarter Instance
