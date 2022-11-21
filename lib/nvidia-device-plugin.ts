@@ -43,6 +43,7 @@ export class NvidiaDevicePlugin extends cdk.Construct {
       release: 'nvidia-device-plugin',
       values: helmValues,
       wait: false,
+      version: '0.11.0',
     });
   }
 }
